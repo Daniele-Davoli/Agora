@@ -5,17 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agorà</title>
 
-    <link rel="stylesheet" href="main.css">
+    <script src="https://accounts.google.com/gsi/client" async></script>
+
+    <link rel="stylesheet" href="./main.css">
     <script src="./main.js"></script>
 </head>
 <body>
-    <div id="colonna">
-        <h1>mi ami Nicole?</h1>
-        <div id="riga">
-            <button onclick="si()">SI</button>
-            <button onclick="no()">NO</button>
+    <div id="btnWrap">
+        <!-- Sign In With Google button with HTML data attributes API -->
+        <div id="g_id_onload"
+            data-client_id="382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com"
+            data-context="signin"
+            data-ux_mode="popup"
+            data-callback="handleCredentialResponse"
+            data-auto_prompt="false">
         </div>
         
+        <div class="g_id_signin"
+            data-type="standard"
+            data-shape="rectangular"
+            data-theme="outline"
+            data-text="signin_with"
+            data-size="large"
+            data-logo_alignment="left">
+        </div>
+
     </div>
+
+    <!-- Display the user's profile info -->
+    <div class="pro-data hidden">
+
+    </div>
+
 </body>
 </html>
