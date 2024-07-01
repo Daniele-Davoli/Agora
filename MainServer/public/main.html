@@ -11,31 +11,11 @@
     <script src="./main.js"></script>
 </head>
 <body>
-    <div id="btnWrap">
-        <!-- Sign In With Google button with HTML data attributes API -->
-        <div id="g_id_onload"
-            data-client_id="382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com"
-            data-context="signin"
-            data-ux_mode="popup"
-            data-callback="handleCredentialResponse"
-            data-auto_prompt="false">
-        </div>
-        
-        <div class="g_id_signin"
-            data-type="standard"
-            data-shape="rectangular"
-            data-theme="outline"
-            data-text="signin_with"
-            data-size="large"
-            data-logo_alignment="left">
-        </div>
-
-    </div>
-
-    <!-- Display the user's profile info -->
-    <div class="pro-data hidden">
-
-    </div>
+    
+    <a class="google-signin-button" href="/auth/google">
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20">
+        Sign In with Google
+    </a>
 
 </body>
 </html>
