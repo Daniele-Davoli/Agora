@@ -12,7 +12,7 @@ const port = 8080;
 app.use(express.static('public'));
 
 app.use(session({
-  secret: 'Agora2024',
+  secret: 'SECRET_KEY',
   resave: false,
   saveUninitialized: true
 }));
