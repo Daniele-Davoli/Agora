@@ -6,10 +6,14 @@ const mysql = require('mysql');
 require('./passport-setup');
 
 const app = express();
-const port = 8080;
+const port = 80;
 
 // Servire i file statici dalla cartella 'public'
 app.use(express.static('public'));
+app.use('/user', express.static(__dirname + '/user'));
+app.use('/admin', express.static(__dirname + '/admin'));
+
+
 
 app.use(session({
   secret: 'Agora2024',
@@ -58,51 +62,94 @@ app.get('/profile', (req, res) => {
       
     con.connect(function(err) {
         if (err) throw err;
-        
-        con.query("SELECT COUNT(*) as num FROM users WHERE oauth_provider = '"+profile.provider+"' AND first_name = '"+profile.name.givenName+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
-            if (err) throw err;
 
-            if(result[0].num == 1 ){
-                let query = `
-                  UPDATE users 
-                  SET 
-                    modified = NOW(),
-                    picture = '${profile.photos[0].value}',
-                    email = '${profile.emails[0].value}',
-                    first_name = '${profile.name.givenName}',
-                    oauth_uid = '${profile.id}',
-                    oauth_provider = '${profile.provider}'
-                  WHERE 
-                    oauth_provider = '${profile.provider}' AND 
-                    first_name = '${profile.name.givenName}' AND 
-                    email = '${profile.emails[0].value}'
-                `;
-                
-                con.query(query,(err,result)=>{
-                    if (err) throw err;
-                    console.log("Utente aggiornato");
-                });
-            }
-            else if(result[0].num == 0 ){
-                let query= "INSERT INTO users (modified, created, picture, email, first_name, oauth_uid, oauth_provider) VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');"
-                
-                con.query(query,(err,result)=>{
-                    if (err) throw err;
-                    console.log("Nuovo utente creato",);
-                });
-            }
-            else{
-              throw "Errore, piu account esistenti";
-            }
+
+        con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
+          if (err) throw err;
+
+          if(result[0].num == 1 ){
+              let query = `
+                UPDATE users 
+                SET 
+                  modified = NOW(),
+                  picture = '${profile.photos[0].value}',
+                  email = '${profile.emails[0].value}',
+                  first_name = '${profile.name.givenName}',
+                  oauth_uid = '${profile.id}',
+                  oauth_provider = '${profile.provider}'
+                WHERE 
+                  oauth_provider = '${profile.provider}' AND 
+                  first_name = '${profile.name.givenName}' AND 
+                  email = '${profile.emails[0].value}'
+              `;
+              
+              con.query(query,(err,result)=>{
+                  if (err) throw err;
+                  console.log("Admin aggiornato");
+
+                  res.sendFile(__dirname + '/admin/main.html');
+              });
+          }
+          else{
+            con.query("SELECT COUNT(*) as num FROM users WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
+              if (err) throw err;
+  
+              if(result[0].num == 1 ){
+                  let query = `
+                    UPDATE users 
+                    SET 
+                      modified = NOW(),
+                      picture = '${profile.photos[0].value}',
+                      email = '${profile.emails[0].value}',
+                      first_name = '${profile.name.givenName}',
+                      oauth_uid = '${profile.id}',
+                      oauth_provider = '${profile.provider}'
+                    WHERE 
+                      oauth_provider = '${profile.provider}' AND 
+                      first_name = '${profile.name.givenName}' AND 
+                      email = '${profile.emails[0].value}'
+                  `;
+                  
+                  con.query(query,(err,result)=>{
+                      if (err) throw err;
+                      console.log("Utente aggiornato");
+                  });
+              }
+              else if(result[0].num == 0 ){
+                if(profile.emails[0].value.toLowerCase().trim() == "danidavo05@gmail.com"){
+                  let query= "INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');"
+                  
+                  con.query(query,(err,result)=>{
+                      if (err) throw err;
+                      console.log("Nuovo admin creato",);
+                  });
+                }
+                else{
+                  let query= "INSERT INTO users (modified, created, picture, email, first_name, oauth_uid, oauth_provider) VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');"
+                  
+                  con.query(query,(err,result)=>{
+                      if (err) throw err;
+                      console.log("Nuovo utente creato",);
+                  });
+                }
+              }
+              else{
+                throw "Errore, piu account esistenti";
+              }
+
+
+              res.sendFile(__dirname + '/user/main.html');
+            });
+          }
         });
     });
   }
 
 
-  res.sendFile(__dirname + '/private/main.html');
+
+
+
 });
-
-
 
 
 
