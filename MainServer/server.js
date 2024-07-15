@@ -9,9 +9,7 @@ const app = express();
 const port = 80;
 
 // Servire i file statici dalla cartella 'public'
-app.use(express.static('public'));
-app.use('/user', express.static(__dirname + '/user'));
-app.use('/admin', express.static(__dirname + '/admin'));
+app.use('/static', express.static(__dirname + '/static'));
 
 
 
@@ -25,7 +23,7 @@ app.use(passport.session());
 
 // Route principale
 app.get('/', async (req, res) => {
-  res.sendFile(__dirname + '/public/main.html');
+  res.sendFile(__dirname + '/private/public/main.html');
 });
 
 
@@ -87,7 +85,7 @@ app.get('/profile', (req, res) => {
                   if (err) throw err;
                   console.log("Admin aggiornato");
 
-                  res.sendFile(__dirname + '/admin/main.html');
+                  res.sendFile(__dirname + '/private/admin/main.html');
               });
           }
           else{
@@ -138,7 +136,7 @@ app.get('/profile', (req, res) => {
               }
 
 
-              res.sendFile(__dirname + '/user/main.html');
+              res.sendFile(__dirname + '/private/user/main.html');
             });
           }
         });
