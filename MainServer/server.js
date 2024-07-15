@@ -10,6 +10,7 @@ const port = 80;
 
 // Servire i file statici dalla cartella 'public'
 app.use('/static', express.static(__dirname + '/static'));
+app.use('/publicContent', express.static(__dirname + '/static/publicContent'));
 
 
 

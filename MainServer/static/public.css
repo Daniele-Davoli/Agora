@@ -1,30 +1,663 @@
-body{
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
-    width: 100vw;
-    height: 100vh;
-    background-color: rgb(33, 33, 33);
+/*@font-face {
+    font-family: CustomFont;
+    src: url(/static/login/Font/dalekpinpointbold-webfont.woff);
+}*/
+:root{
+  --fontSize:3vh;
 }
-*{
-    padding: 0px;
-    margin: 0px;
+body{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: hidden;
+  overflow-x: hidden;
+
+  height: 100vh;
+  width: 100%;
+  background-color: rgb(33, 33, 33);
+  margin: 0;
+  
+}
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent; 
+}
+
+#Coin{
+  position: fixed;
+  background: transparent;
+  width: 100%;
+  z-index: 5;
+}
+#IconCoin{
+  display: flex;
+  position: fixed;
+  background: transparent;
+  width: 99%;
+  z-index: 4;
+  opacity: 0.0;
+  border: 2px solid rgba(255, 255, 255, 0);
+}
+#Loading p{
+  font-size: var(--fontSize);
+  font-family: 'CustomFont';
+  background: transparent;
+  float:left;
+
+  margin-right: 0.7vw;
+  margin-left: 4vw;
+
+  background: linear-gradient(
+                    90deg,
+                    white 40%,
+                    gold 50%,
+                    white 100%
+                  ) 0 0 / 240% 100%;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  
+  animation: Finiture 10s infinite reverse;
+  animation-delay: 2s;
+}
+.Loading{
+  font-size: var(--fontSize);
+  font-family: 'CustomFont';
+  background: transparent;
+  float: right;
+  
+  margin-right: 0.5vw;
+
+  animation: Load 2s infinite ease-in-out,DotFiniture 10s infinite reverse;
+
+  color: rgb(230, 230, 230);
+}
+.Loading:nth-last-child(1){
+  animation-delay: 2.6s;
+}
+.Loading:nth-last-child(2){
+  animation-delay: 2.9s;
+}
+.Loading:nth-last-child(3){
+  margin-right: 0.6vw;
+  animation-delay: 3.2s;
+}
+
+#Sfocatura{
+  display: none;
+  opacity: 0.0;
 }
 
 .google-signin-button {
-    display: inline-block;
-    background: white;
-    color: #757575;
-    border: 1px solid #dadce0;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 10px 15px;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
+  display: inline-block;
+  background: white;
+  color: #757575;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 15px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+.google-signin-button img {
+  margin-right: 10px;
+}
+#Google_button{
+  display: none;
+  opacity: 0.0;
+}
+
+#Home{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width:100%;
+  height: 100%;
+  opacity: 0.0;
+}
+
+@keyframes Load{
+  30%{
+          transform: translateY(-0.6vw);
+          
+      }
+  60%{
+          transform: translateY(0vw);
+          
+      }    
+}
+@keyframes DotFiniture {
+  30% {
+      color: rgb(230, 230, 230);
+      text-shadow: none;
+    }
+  45%{
+      color: gold;
+      text-shadow: 0 0 10px gold;
   }
-  .google-signin-button img {
-    margin-right: 10px;
+  60% {
+      color: rgb(230, 230, 230);
+      text-shadow: none;
+    }
+}
+@keyframes Finiture {
+  0% {
+      background-position: 0% 0;
+      text-shadow: none;
+    }
+  30% {
+      background-position: 0% 0;
+      text-shadow: none;
+    }
+  45%{
+      background-position: 50% 0;
+      text-shadow: 0 0 10px gold;
   }
+  60% {
+      background-position: 170% 0;
+      text-shadow: none;
+    }
+  100% {
+      background-position: 170% 0;
+      text-shadow: none;
+    }
+}
+
+/*Telefono*/
+@media only screen and (max-width:500px){
+  #Loading{
+      white-space: nowrap;
+      position: fixed;
+      z-index: 5;
+      background: transparent;
+      display: inline-block;
+      opacity: 0.0;
+      transform: translateY(12vh);
+  }
+
+  #Google_button{
+      z-index: 2;
+      white-space: nowrap;
+      position: fixed;
+      justify-content: center;
+      align-items: center;
+      width: 80%;
+      height: auto;
+      border-radius: 15vw;
+      background-color: rgb(33, 33, 33);
+      border: 2px solid rgb(255, 255, 255);
+      color: white;
+      text-decoration: none;
+      transform: translateY(-15vw);
+  }
+  #Sfocatura{
+      z-index:2;
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.4);
+  }
+  #Google_button p{
+      width: auto;
+      height: auto;
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+      font-weight: bold;
+      font-size: 5.8vw;
+      margin-left: 8%;
+  }
+  #Icon{
+      width: 22%;
+      background-color: transparent;
+      margin-top: 3%;
+      margin-bottom: 3%;
+  }
+  
+  /*TABLE PICTURE*/
+  #table_ground{
+      scale: 150%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position:fixed;
+
+      border: none;
+      padding: none;
+      margin-right: 25vw;
+      margin-top: 50vw;
+
+  
+      
+      background-image: url("/publicContent/ground2.png");
+      background-color: transparent;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: top center;
+  
+  
+      width: 150%;
+      height: 66vw;
+  
+      
+  
+      z-index: 1;
+  
+      transform: 
+          perspective(1200px)
+          rotateX(75deg)
+          rotateY(0deg)   
+          rotateZ(40deg);
+  
+      transform-style:preserve-3d;
+  
+      
+  
+      /*
+      background-color: rgba(255, 0, 0, 0.5);
+      border: 2px solid white;
+      /**/
+  }
+  #table_back{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position:fixed;
+
+      border: none;
+      padding: none;
+      margin: 0px;
+      
+      background-image: url("/publicContent/back2.png");
+      background-color: transparent;
+      background-size:contain;
+      background-repeat: no-repeat;
+      background-position: bottom center;
+  
+      width: 100%;
+      height:720px;
+  
+      right:100px;
+  
+  
+      transform:
+          translateX(100px)
+          translateY(-33vw)
+          translateZ(361px)
+          rotateX(-90deg);
+      
+      transform-style: preserve-3d;
+  
+      /*
+      background-color: rgba(255,255,255,0.5);
+      border: 2px solid white;
+      /**/
+  }
+  #banco{
+      position:fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  
+  
+      border: none;
+      padding: none;
+      margin: 0px;
+      
+      width: 100%;
+      height:100%;
+  
+      top: 0;
+      right: 0;
+  
+      background-position: center;
+      background-image: url("/publicContent/texture2.2.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-color: transparent;
+      background-position:top center;
+  
+  
+      transform-style:preserve-3d;
+      transform: 
+          translateZ(8vw);
+  
+      /*
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgb(255, 0, 0);
+      /**/
+  }
+  #banco::after{
+      position:fixed;
+      content: "";
+      background-color: #312413;
+      height: 23.5vw;
+      width: 1vw;
+      
+      transform: 
+          translateY(-11.8vw)
+          translateX(26.4vw)
+          translateZ(-0.4vw)
+          rotateY(90deg);
+      /*background-color: #ffffff;*/
+  }
+  #banco::before{
+      position:fixed;
+      content: "";
+      background-color: #271c03;
+
+      height: 1vw;
+      width: 52.4vw;
+      
+      transform: 
+          translateX(0.2vw)
+          translateY(0px)
+          translateZ(-0.4vw)
+          rotateX(90deg);
+      /*background-color: #ffffff;*/
+  }
+  #foglio{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  
+      position:relative;
+      border: none;
+      padding: none;
+      margin: 0px;
+      
+      height:14%;
+      width: 13vw;
+  
+      z-index: 1;
+  
+      background-image: url("/publicContent/firma.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-color: transparent;
+      background-position: center center;
+  
+      transform: translateY(-13vw);
+  }
+
+
+}
+/*Tablet*/
+@media only screen and (min-width:500px){
+  #Loading{
+      white-space: nowrap;
+      position: fixed;
+      z-index: 5;
+      background: transparent;
+      display: inline-block;
+      opacity: 0.0;
+      transform: translateY(calc(var(--fontSize)*3));
+  }
+  #Google_button{
+      z-index: 2;
+      white-space: nowrap;
+      position: fixed;
+      justify-content: center;
+      align-items: center;
+      width: auto;
+      height: auto;
+      border-radius: 15vw;
+      background-color: rgb(33, 33, 33);
+      border: 2px solid rgb(255, 255, 255);
+      color: white;
+      text-decoration: none;
+  }
+  #Sfocatura{
+      z-index:2;
+      position: absolute;
+      width: 100vw;
+      height: 150vh;
+      background-color: rgba(255, 255, 255, 0.4);
+  }
+  #Google_button p{
+      background-color: transparent;
+      width: auto;
+      height: auto;
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+      font-weight: bold;
+      font-size: 2.8vw;
+      padding-left: 0vw;
+      padding-right: 2vw;
+      padding-top: 1vw;
+      padding-bottom: 1vw;
+  }
+  #Icon{
+      height: 8vw;
+      width: auto;
+      background-color: transparent;
+      padding-left: 1.5vw;
+      padding-right: 1vw;
+  }
+
+   /*TABLE PICTURE*/
+   #table_ground{
+      scale: 150%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position:fixed;
+
+      border: none;
+      padding: none;
+      margin-right: 25vw;
+      margin-top: 50vw;
+
+  
+      
+      background-image: url("/publicContent/ground2.png");
+      background-color: transparent;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: top center;
+  
+  
+      width: 150%;
+      height: 66vw;
+  
+      
+  
+      z-index: 1;
+  
+      transform: 
+          perspective(1200px)
+          rotateX(75deg)
+          rotateY(0deg)   
+          rotateZ(40deg);
+  
+      transform-style:preserve-3d;
+  
+      
+  
+      /*
+      background-color: rgba(255, 0, 0, 0.5);
+      border: 2px solid white;
+      /**/
+  }
+  #table_back{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position:fixed;
+
+      border: none;
+      padding: none;
+      margin: 0px;
+      
+      background-image: url("/publicContent/back2.png");
+      background-color: transparent;
+      background-size:contain;
+      background-repeat: no-repeat;
+      background-position: bottom center;
+  
+      width: 100%;
+      height:112.5vw;
+  
+      right:100px;
+  
+  
+      transform:
+          translateX(100px)
+          translateY(-33vw)
+          translateZ(56.3vw)
+          rotateX(-90deg);
+      
+      transform-style: preserve-3d;
+  
+      /*
+      background-color: rgba(255,255,255,0.5);
+      border: 2px solid white;
+      /**/
+  }
+  #banco{
+      position:fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  
+  
+      border: none;
+      padding: none;
+      margin: 0px;
+      
+      width: 100%;
+      height:100%;
+  
+      top: 0;
+      right: 0;
+  
+      background-position: center;
+      background-image: url("/publicContent/texture2.2.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-color: transparent;
+      background-position:top center;
+  
+  
+      transform-style:preserve-3d;
+      transform: 
+          translateZ(8vw);
+  
+      /*
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgb(255, 0, 0);
+      /**/
+  }
+  #banco::after{
+      position:fixed;
+      content: "";
+      background-color: #312413;
+      height: 23.5vw;
+      width: 1vw;
+      
+      transform: 
+          translateY(-11.8vw)
+          translateX(26.4vw)
+          translateZ(-0.4vw)
+          rotateY(90deg);
+      /*background-color: #ffffff;*/
+  }
+  #banco::before{
+      position:fixed;
+      content: "";
+      background-color: #271c03;
+
+      height: 1vw;
+      width: 52.4vw;
+      
+      transform: 
+          translateX(0.25vw)
+          translateY(0px)
+          translateZ(-0.4vw)
+          rotateX(90deg);
+      /*background-color: #ffffff;*/
+  }
+  #foglio{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  
+      position:relative;
+      border: none;
+      padding: none;
+      margin: 0px;
+      
+      height:14%;
+      width: 13vw;
+  
+      z-index: 1;
+  
+      background-image: url("/publicContent/firma.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-color: transparent;
+      background-position: center center;
+  
+      transform: translateY(-13vw);
+
+  }
+}
+/*PC*/
+@media only screen and (min-width:1000px){
+  #Sfocatura{
+      z-index:2;
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.4);
+  }
+  #banco::after{
+      position:fixed;
+      content: "";
+      background-color: #312413;
+      height: 23vw;
+      width: 1vw;
+      
+      transform: 
+          translateY(-12.1vw)
+          translateX(26.1vw)
+          translateZ(-0.4vw)
+          rotateY(90deg);
+      /*background-color: #ffffff;*/
+  }
+  #banco::before{
+      position:fixed;
+      content: "";
+      background-color: #271c03;
+
+      height: 1vw;
+      width: 52.4vw;
+      
+      transform: 
+          translateX(0vw)
+          translateY(-0.6vw)
+          translateZ(-0.4vw)
+          rotateX(90deg);
+      /*background-color: #ffffff;*/
+  }
+  #Google_button p{
+      background-color: transparent;
+      width: auto;
+      height: auto;
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+      font-weight: bold;
+      font-size: 2.8vw;
+      padding-left: 0vw;
+      padding-right: 2.5vw;
+      padding-top: 1vw;
+      padding-bottom: 1vw;
+  }
+  #Icon{
+      height: 8vw;
+      width: auto;
+      background-color: transparent;
+      padding-left: 3vw;
+      padding-right: 0vw;
+  }
+}
