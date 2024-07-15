@@ -1,14 +1,179 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="IT_it">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-
-    <script src="/static/admin.js"></script>
+    <title>Agorà</title>
     <link rel="stylesheet" href="/static/admin.css">
+    <script type="text/javascript" src="/static/admin.js"></script>
 </head>
+
 <body>
-    <h1>Admin</h1>
+    <div id="zoom">
+        <div id="close2">
+            <div class="X3"></div>
+            <div class="X3"></div>
+        </div>
+
+        <h1 id="NumeroZoom"></h1>
+        <div id="TempoZoom"></div>
+
+    </div>
+
+    <div id="Home">
+
+
+
+        <div id="PopUp">
+            <button id="Indietro">
+                <div id="Simbolo"></div>
+            </button>
+
+            <div id="Switch">
+                <div class="Switch SwitchPrimary">
+                    <h1 id="SpegniTV">Spegni la TV!</h1>
+                    <img id="BTNTV" src="/adminContent/off.png">
+                    <span id="SpegniTV2">Si toglierà la possibilità di entrare nella riunione (Si può riattivare in
+                        qualsiasi momento)</span>
+                </div>
+
+                <div class="Switch ">
+                    <h1 id="TitoloDomanda">Fai la tua domanda!</h1>
+                    <textarea type="text" id="descrizioneDomanda" placeholder="Inserire il testo della domanda.."
+                        maxlength="150"></textarea>
+                    <button id="InviaDomanda">INVIA</button>
+
+                    <div id="poll-started" style="visibility: hidden;">
+                        <table id="live-counter">
+                            <tr>
+                                <th>Sì</th>
+                                <th>Astenuto</th>
+                                <th>No</th>
+                            </tr>
+                            <tr>
+                                <td id="poll-yes">0</td>
+                                <td id="poll-boh">0</td>
+                                <td id="poll-no">0</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <button id="StopDomanda" style="display: inline-block; visibility: hidden;">STOP</button>
+                </div>
+
+                <div class="Switch">
+                    <h1 id="TerminaRiunione">Termina qui la tua Riunione!</h1>
+                    <button id="BTNTermina">Termina</button>
+                    <h2 id="TerminaRiunione2">Si riceverà una Mail contenente le informazioni</h2>
+                </div>
+
+            </div>
+
+            <div id="Richiamo">
+                <button class="Freccette" onclick=Switch(0)></button>
+                <button class="Freccette Freccetta_Selezionata" onclick=Switch(1)>1</button>
+                <button class="Freccette" onclick=Switch(2)>2</button>
+                <button class="Freccette" onclick=Switch(3)>3</button>
+                <button class="Freccette" onclick=Switch(4)>></button>
+            </div>
+
+            <span id="Versione">Agorà versione [ <b>ALPHA</b> ] by Davoli Daniele</span>
+        </div>
+
+
+        <div id="Info">
+            <button id="InfoClick"></button>
+        </div>
+
+
+        <div id="table_ground">
+            <div id="table_back">
+                <div id="TV">
+                    <h1 id="TitoloCodice">Codice</h1>
+                    <h1 id="Numero">11111</h1>
+                    <div id="Tempo"></div>
+                </div>
+            </div>
+
+            <div id="banco">
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div id="bodypaper">
+
+
+        <img id="IconReference" src="/adminContent/Coin.png">
+
+        <div id="paper">
+
+            <img src="/adminContent/logo_darzo.png" id="logo">
+
+            <input type="text" placeholder="Inserire un titolo.." id="TitoloRiunione">
+
+            <P class="dati">I suoi dati saranno trattati in via primaria per la <b><u>fruizione dei nostri
+                        servizi</u></b>, ivi inclusa la possibilità di gestione dei prodotti resi disponibili, ossia per
+                le finalità strettamente connesse con lo svolgimento dell’attività contrattuale e funzionali
+                all’adempimento delle obbligazioni derivanti dal contratto o incarico, oltreché per adempiere agli
+                obblighi precontrattuali, fiscali, e gli ulteriori previsti dalla legge, da un regolamento, dalla
+                normativa comunitaria o da un ordine dell’Autorità (come ad esempio in materia di antiriciclaggio) e per
+                esercitare i diritti del Titolare, quale ad esempio il diritto di difesa in giudizio.</P>
+
+            <div id="Google_button">
+                <div class="Information">
+                    <p>Nome:</p>
+                    <h1 id="Nome"></h1>
+                </div>
+                <div class="Information">
+                    <p>Cognome:</p>
+                    <h1 id="Cognome"></h1>
+                </div>
+            </div>
+
+            <p class="dati">I dati personali <b><u>da lei forniti</u></b> saranno trattati per finalità connesse
+                all’esecuzione del contratto o dell’incarico ricevuto, compresa l’eventuale fase precontrattuale e,
+                precisamente, per la compilazione di liste anagrafiche, la tenuta della contabilità, la fatturazione,
+                l’effettuazione di comunicazioni sia con mezzi cartacei che informatici, adempimenti fiscali, gestione
+                organizzativa delle prestazioni richieste e stipula dei contratti, fissazione degli appuntamenti,
+                evasione ordini, consegne, adempimenti burocratici relativi alle prestazioni richieste.</p>
+
+            <textarea type="text" id="descrizione" placeholder="Inserire la descrizione della riunione.."></textarea>
+
+            <button id="whitelist">Aggiungi Persone alla WhiteList</button>
+
+            <div id="submit">
+                <input type="submit" value="Crea" id="Riunione">
+                <div id="firmaimg">
+                    <img src="/adminContent/Firma.png" id="firmaimg2">
+                </div>
+            </div>
+
+
+            <div id="PopUpWL">
+                <div id="close">
+                    <div class="X"></div>
+                    <div class="X"></div>
+                </div>
+                <h2 id="title">WhiteList</h2>
+                <input type="text" placeholder="pippobaudo@gmail.com" id="add">
+
+                <ul id="list">
+                    <li class="listMail" style="display: flex;"><span class="Mail"></span>
+                        <div class="XDiv">
+                            <div class="X2"></div>
+                        </div>
+                    </li>
+                </ul>
+
+                <span id="copyright">© Copyright 2022-2023 Davoli Daniele - All Rights Reserved</span>
+            </div>
+        </div>
+    </div>
+
 </body>
+
 </html>

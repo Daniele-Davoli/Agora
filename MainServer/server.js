@@ -11,6 +11,7 @@ const port = 80;
 // Servire i file statici dalla cartella 'public'
 app.use('/static', express.static(__dirname + '/static'));
 app.use('/publicContent', express.static(__dirname + '/static/publicContent'));
+app.use('/adminContent', express.static(__dirname + '/static/adminContent'));
 
 
 
@@ -25,6 +26,9 @@ app.use(passport.session());
 // Route principale
 app.get('/', async (req, res) => {
   res.sendFile(__dirname + '/private/public/main.html');
+});
+app.get('/admin', async (req, res) => {
+  res.sendFile(__dirname + '/private/public/admin/login.html');
 });
 
 
@@ -86,7 +90,16 @@ app.get('/profile', (req, res) => {
                   if (err) throw err;
                   console.log("Admin aggiornato");
 
-                  res.sendFile(__dirname + '/private/admin/main.html');
+                  res.sendFile(__dirname + '/private/admin/main.html', err => {
+                    if (err) {
+                      res.status(500).send(err);
+                      console.log("Errore");
+                    } else {
+                        // Invia anche l'oggetto JSON come parte della risposta
+                        res.write(`<script>window.userInfo = ${JSON.stringify(profile)};</script>`);
+                        res.end();
+                    }
+                  });
               });
           }
           else{

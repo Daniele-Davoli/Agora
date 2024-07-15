@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="IT_it">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agorà</title>
+    <link rel="stylesheet" href="/static/AdminLogin.css">
+    <script type="text/javascript" src="/static/AdminLogin.js"></script>
+</head>
+<body>
+    <div id="Home">
+
+        <video id="Coin" autoplay muted>
+            <source src="/publicContent/Coin2.0.mp4" type="video/mp4">
+        </video>
+
+        <img id="IconCoin" src="/publicContent/Coin.png">
+        <div id="Loading">
+            <p>Caricamento della riunione</p>
+            <h1 class="Loading">.</h1>
+            <h1 class="Loading">.</h1>
+            <h1 class="Loading">.</h1>
+        </div>
+
+        <img id="IconCoin2" src="/publicContent/Coin2.0.png">
+
+        <h1 id="Press"> Premi <b> [ INVIO ] </b> per continuare</h1>
+
+        <video id="CoinClick" muted>
+            <source src="/publicContent/CoinClick.mp4" type="video/mp4">
+        </video>
+
+        <button id="IconClickEffect"></button>
+        <div id="Effect">
+            <div id="Circle"></div>
+            <div class="Circle"></div>
+        </div>
+
+        <!--a id="Google_button" class="google-signin-button" href="/auth/google">
+            <img id="IconGoogle" src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20">
+            Sign In with Google
+        </a-->
+
+        
+        <a id="Google_button" href="/auth/google">              
+            <img id="IconGoogle" src="/publicContent/Google_Logo.png"> 
+            <p>Accedi con Google</p>
+        </a>
+
+    </div>
+</body>
+</html>
