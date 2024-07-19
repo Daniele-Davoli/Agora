@@ -10,10 +10,13 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
+
 const port=80;
+
 
 app.use('/user', express.static(__dirname + '/static/user'));
 app.use('/admin', express.static(__dirname + '/static/admin'));
+
 app.use(session({
   secret: 'Agora2024',
   resave: false,
@@ -28,8 +31,8 @@ passport.deserializeUser((obj, done) => {
 
 
 app.use(async (req, res, next) => {
-  if(req.originalUrl.includes("/auth/google") && req.originalUrl.length<=18){
-    let fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}/callback`;
+  if((/^\/(user|admin)\/auth\/google$/).test(req.originalUrl)){
+    let fullUrl = `${req.originalUrl}/callback`;
 
     console.log(fullUrl);
 
@@ -45,7 +48,6 @@ app.use(async (req, res, next) => {
   }
   next();
 });
-
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -54,11 +56,23 @@ app.use(passport.session());
 
 
 
-app.get('/admin',async (req, res) => {
-      res.sendFile(__dirname + '/admin/admin.html');
-});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get('/',async (req, res) => {
-  res.sendFile(__dirname + '/user/user.html');
+  res.sendFile(__dirname + '/private/user/main.html');
 });
 
 //Autentificazione USER
@@ -68,16 +82,7 @@ app.get('/user/auth/google/callback', passport.authenticate('google', { failureR
   res.redirect('/userProfile');
 });
 
-//Autentificazione ADMIN
-app.get('/admin/auth/google',passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/admin/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }),(req, res) => {
-  // Autenticazione riuscita
-  res.redirect('/adminProfile');
-});
-
-
 // Rotta per visualizzare il profilo utente
-
 app.get('/userProfile', (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect('/');
@@ -88,6 +93,40 @@ app.get('/userProfile', (req, res) => {
   res.send("Authenticated as User");
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get('/admin',async (req, res) => {
+  res.sendFile(__dirname + '/private/admin/main.html');
+});
+
+//Autentificazione ADMIN
+app.get('/admin/auth/google',passport.authenticate('google', { scope: ['profile', 'email'] }));
+app.get('/admin/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }),(req, res) => {
+  // Autenticazione riuscita
+  res.redirect('/adminProfile');
+});
+
 // Rotta per visualizzare il profilo admin
 app.get('/adminProfile', (req, res) => {
   if (!req.isAuthenticated()) {
@@ -95,8 +134,112 @@ app.get('/adminProfile', (req, res) => {
   }
   
   let profile=req.user;
+  var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "agorà"
+  });
 
-  res.send("Authenticated as Admin");
+
+  con.connect(function(err) {
+    if (err) throw err;
+
+
+    con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
+      if (err) throw err;
+
+      if(result[0].num != 0 ){
+        let query = `
+          UPDATE users 
+          SET 
+            modified = NOW(),
+            picture = '${profile.photos[0].value}',
+            email = '${profile.emails[0].value}',
+            first_name = '${profile.name.givenName}',
+            oauth_uid = '${profile.id}',
+            oauth_provider = '${profile.provider}'
+          WHERE 
+            oauth_provider = '${profile.provider}' AND 
+            first_name = '${profile.name.givenName}' AND 
+            email = '${profile.emails[0].value}'
+          `;
+          
+        con.query(query,(err,result)=>{
+          if (err) throw err;
+
+          console.log("Admin aggiornato");
+        });
+      }
+      else{
+        let query= `
+          INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) 
+          VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');
+          `;
+              
+        con.query(query,(err,result)=>{
+          if (err) throw err;
+
+          console.log("Nuovo admin creato",);
+        });
+        
+        
+        /*con.query("SELECT COUNT(*) as num FROM users WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
+          if (err) throw err;
+
+          if(result[0].num == 1 ){
+              let query = `
+                UPDATE users 
+                SET 
+                  modified = NOW(),
+                  picture = '${profile.photos[0].value}',
+                  email = '${profile.emails[0].value}',
+                  first_name = '${profile.name.givenName}',
+                  oauth_uid = '${profile.id}',
+                  oauth_provider = '${profile.provider}'
+                WHERE 
+                  oauth_provider = '${profile.provider}' AND 
+                  first_name = '${profile.name.givenName}' AND 
+                  email = '${profile.emails[0].value}'
+              `;
+              
+              con.query(query,(err,result)=>{
+                  if (err) throw err;
+                  console.log("Utente aggiornato");
+              });
+          }
+          else if(result[0].num == 0 ){
+            if(profile.emails[0].value.toLowerCase().trim() == "danidavo05@gmail.com"){
+              let query= "INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');"
+              
+              con.query(query,(err,result)=>{
+                  if (err) throw err;
+                  console.log("Nuovo admin creato",);
+              });
+            }
+            else{
+              let query= "INSERT INTO users (modified, created, picture, email, first_name, oauth_uid, oauth_provider) VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');"
+              
+              con.query(query,(err,result)=>{
+                  if (err) throw err;
+                  console.log("Nuovo utente creato",);
+              });
+            }
+          }
+          else{
+            throw "Errore, piu account esistenti";
+          }
+
+
+          res.sendFile(__dirname + '/user/main.html');
+        });*/
+      }
+
+      
+    });
+  });
+
+  res.sendFile(__dirname + '/admin/admin.html');
 
 
   //Check account nel DB 
@@ -198,6 +341,26 @@ app.get('/adminProfile', (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //Socket
 io.on('connection', async (socket) => {
   console.log('user connected');
@@ -216,6 +379,12 @@ io.on('connection', async (socket) => {
   });
   
 });
+
+
+
+
+
+
 
 
 server.listen(port, () => {
