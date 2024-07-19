@@ -57,21 +57,20 @@ class Timer {
     }
 }
 const timer = new Timer();
-var zoomFlag;
+let zoomFlag;
 
-var ElencoEmail,k=0;
-var Secondi;
+let ElencoEmail,k=0;
+let Secondi;
 
-var isSelected;
-var TV;
+let isSelected;
+let TV;
 
-var fontSize,icon,table;
-var titolo,desc,flag2;
-var info,PopUp;
+let fontSize,icon,table;
+let titolo,desc,flag2;
+let info,PopUp;
 
-var Numero="12345";
-//const socket = new WebSocket('ws://' + window.location.host + "/ws")
-var clockHandle;
+let Numero="12345";
+let clockHandle;
 let socket;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -81,20 +80,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("Nome").innerHTML = name;
         document.getElementById("Cognome").innerHTML = surname;
     });
-
-    /*if (window.profile) {
-        document.getElementById("Nome").innerHTML = window.profile.name;
-        document.getElementById("user-email").textContent = `Email: ${window.userInfo.email}`;
-    }*/
 });
 
 window.onload = function(){
-
-    
-
-
-
-
     new FontFace('CustomFont', 'url(/user/userContent/Font/dalekpinpointbold-webfont.woff) format("woff2")').load().then(function(loaded_face) {
         document.fonts.add(loaded_face)
     })

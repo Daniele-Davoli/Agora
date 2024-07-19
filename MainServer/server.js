@@ -19,6 +19,9 @@ const con = mysql.createConnection({
   password: "",
   database: "agorà"
 });
+con.connect(function(err) {
+  if (err) throw err;
+});
 
 
 app.use('/user', express.static(__dirname + '/static/user'));
@@ -32,6 +35,7 @@ const sessionMiddleware = session({
 });
 app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
+
 
 passport.serializeUser((user, done) => {
   done(null, user);
@@ -98,93 +102,12 @@ app.get('/userProfile', (req, res) => {
   let profile=req.user;
 
   res.send("Authenticated as User");
-});
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-app.get('/admin',async (req, res) => {
-  res.sendFile(__dirname + '/private/admin/main.html');
-});
-
-//Autentificazione ADMIN
-app.get('/admin/auth/google',passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/admin/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }),(req, res) => {
-  // Autenticazione riuscita
-  res.redirect('/adminProfile');
-});
-
-// Rotta per visualizzare il profilo admin
-app.get('/adminProfile', async(req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect('/admin');
-  }
-  
-  let profile=req.user;
-  
-
-
-  con.connect(function(err) {
-    if (err) throw err;
-
-
-    con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
-      if (err) throw err;
-
-      if(result[0].num != 0 ){
-        let query = `
-          UPDATE users 
-          SET 
-            modified = NOW(),
-            picture = '${profile.photos[0].value}',
-            email = '${profile.emails[0].value}',
-            first_name = '${profile.name.givenName}',
-            oauth_uid = '${profile.id}',
-            oauth_provider = '${profile.provider}'
-          WHERE 
-            oauth_provider = '${profile.provider}' AND 
-            first_name = '${profile.name.givenName}' AND 
-            email = '${profile.emails[0].value}'
-          `;
-          
-        con.query(query,(err,result)=>{
-          if (err) throw err;
-        });
-      }
-      else{
-        let query= `
-          INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) 
-          VALUES (NOW(), NOW(), '${profile.photos[0].value}', '${profile.emails[0].value}', '${profile.name.givenName}', '${profile.id}', '${profile.provider}');
-          `;
-              
-        con.query(query,(err,result)=>{
-          if (err) throw err;
-
-          console.log("Nuovo admin creato",);
-        });
-        
-        
-        /*con.query("SELECT COUNT(*) as num FROM users WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
+  /*con.query("SELECT COUNT(*) as num FROM users WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
           if (err) throw err;
 
           if(result[0].num == 1 ){
@@ -233,118 +156,92 @@ app.get('/adminProfile', async(req, res) => {
 
           res.sendFile(__dirname + '/user/main.html');
         });*/
-      }
-
-      
-    });
-
-  });
+});
 
 
 
 
-  req.session.user = profile;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get('/admin',async (req, res) => {
+  res.sendFile(__dirname + '/private/admin/main.html');
+});
+
+//Autentificazione ADMIN
+app.get('/admin/auth/google',passport.authenticate('google', { scope: ['profile', 'email'] }));
+app.get('/admin/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }),(req, res) => {
+  // Autenticazione riuscita
+  res.redirect('/adminProfile');
+});
+
+// Rotta per visualizzare il profilo admin
+app.get('/adminProfile', async(req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect('/admin');
+  }
   
-  res.sendFile(__dirname + '/private/admin/logged.html');
+  let profile=req.user;
+  
+  
+  con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
+    if (err) throw err;
 
-
-  //Socket
-
-  //Check account nel DB 
-  /*{
-    
-
-    var con = mysql.createConnection({
-          host: "localhost",
-          user: "root",
-          password: "",
-          database: "agorà"
+    if(result[0].num != 0 ){
+      let query = `
+        UPDATE users 
+        SET 
+          modified = NOW(),
+          picture = '${profile.photos[0].value}',
+          email = '${profile.emails[0].value}',
+          first_name = '${profile.name.givenName}',
+          oauth_uid = '${profile.id}',
+          oauth_provider = '${profile.provider}'
+        WHERE 
+          oauth_provider = '${profile.provider}' AND 
+          first_name = '${profile.name.givenName}' AND 
+          email = '${profile.emails[0].value}'
+        `;
+          
+      con.query(query,(err,result)=>{
+        if (err) throw err;
       });
-      
-    con.connect(function(err) {
+    }
+    else{
+      let query= `
+        INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) 
+        VALUES (NOW(), NOW(), '${profile.photos[0].value}', '${profile.emails[0].value}', '${profile.name.givenName}', '${profile.id}', '${profile.provider}');
+        `;
+              
+      con.query(query,(err,result)=>{
         if (err) throw err;
 
+        console.log("Nuovo admin creato",);
+      }); 
+    }
+  });
 
-        con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
-          if (err) throw err;
+  req.session.user = profile;
+  req.session.admin = true;
+  res.sendFile(__dirname + '/private/admin/logged.html');
 
-          if(result[0].num == 1 ){
-              let query = `
-                UPDATE users 
-                SET 
-                  modified = NOW(),
-                  picture = '${profile.photos[0].value}',
-                  email = '${profile.emails[0].value}',
-                  first_name = '${profile.name.givenName}',
-                  oauth_uid = '${profile.id}',
-                  oauth_provider = '${profile.provider}'
-                WHERE 
-                  oauth_provider = '${profile.provider}' AND 
-                  first_name = '${profile.name.givenName}' AND 
-                  email = '${profile.emails[0].value}'
-              `;
-              
-              con.query(query,(err,result)=>{
-                  if (err) throw err;
-                  console.log("Admin aggiornato");
-
-                  res.sendFile(__dirname + '/admin/main.html');
-              });
-          }
-          else{
-            con.query("SELECT COUNT(*) as num FROM users WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
-              if (err) throw err;
-  
-              if(result[0].num == 1 ){
-                  let query = `
-                    UPDATE users 
-                    SET 
-                      modified = NOW(),
-                      picture = '${profile.photos[0].value}',
-                      email = '${profile.emails[0].value}',
-                      first_name = '${profile.name.givenName}',
-                      oauth_uid = '${profile.id}',
-                      oauth_provider = '${profile.provider}'
-                    WHERE 
-                      oauth_provider = '${profile.provider}' AND 
-                      first_name = '${profile.name.givenName}' AND 
-                      email = '${profile.emails[0].value}'
-                  `;
-                  
-                  con.query(query,(err,result)=>{
-                      if (err) throw err;
-                      console.log("Utente aggiornato");
-                  });
-              }
-              else if(result[0].num == 0 ){
-                if(profile.emails[0].value.toLowerCase().trim() == "danidavo05@gmail.com"){
-                  let query= "INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');"
-                  
-                  con.query(query,(err,result)=>{
-                      if (err) throw err;
-                      console.log("Nuovo admin creato",);
-                  });
-                }
-                else{
-                  let query= "INSERT INTO users (modified, created, picture, email, first_name, oauth_uid, oauth_provider) VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');"
-                  
-                  con.query(query,(err,result)=>{
-                      if (err) throw err;
-                      console.log("Nuovo utente creato",);
-                  });
-                }
-              }
-              else{
-                throw "Errore, piu account esistenti";
-              }
-
-
-              res.sendFile(__dirname + '/user/main.html');
-            });
-          }
-        });
-    });
-  }*/
 });
 
 
@@ -375,13 +272,13 @@ app.get('/adminProfile', async(req, res) => {
 
 //Socket
 io.on('connection', (socket) => { 
-
-
+  if(socket.request.session.admin === true){
     let profile = socket.request.session.user;
     socket.emit('profile',profile.name.givenName,profile.name.familyName);
-    
-    socket.on('CreaRiunione', (titolo,descrizione) => {
+      
+    console.log(profile.emails[0].value + ' connected')
 
+    socket.on('CreaRiunione', (titolo,descrizione) => {
       let query = "SELECT IDAdmin FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'"
       con.query(query, (err,result)=> {
         if (err) throw err;
@@ -389,15 +286,15 @@ io.on('connection', (socket) => {
         let password = Math.random().toString(36).substring(2,7);
 
         query = `INSERT INTO riunioni (Titolo, Descrizione, Password, IDAdmin) VALUES ('${titolo}', '${descrizione}', '${password}', '${result[0].IDAdmin}');`;
-          
+            
         con.query(query, (err, result)=> {
           if (err) throw err;
         });
       });
     });
-    
+      
     socket.on('TerminaRiunione', () => {
-        
+          
       let query = "SELECT IDAdmin FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'"
       con.query(query, (err,result)=> {
         if (err) throw err;
@@ -408,12 +305,12 @@ io.on('connection', (socket) => {
           if (err) throw err;
         });   
       });
-
     });
-    
+      
     socket.on('disconnect', () => {
-        
+        console.log(profile.emails[0].value + ' disconnected')
     });
+  }
 });
 
 
