@@ -13,15 +13,26 @@ const io = new Server(server);
 
 const port=80;
 
+const con = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "agorà"
+});
+
 
 app.use('/user', express.static(__dirname + '/static/user'));
 app.use('/admin', express.static(__dirname + '/static/admin'));
 
-app.use(session({
-  secret: 'Agora2024',
-  resave: false,
-  saveUninitialized: true
-}));
+
+const sessionMiddleware = session({
+  secret: "Agora2024",
+  resave: true,
+  saveUninitialized: true,
+});
+app.use(sessionMiddleware);
+io.engine.use(sessionMiddleware);
+
 passport.serializeUser((user, done) => {
   done(null, user);
 });
@@ -33,8 +44,6 @@ passport.deserializeUser((obj, done) => {
 app.use(async (req, res, next) => {
   if((/^\/(user|admin)\/auth\/google$/).test(req.originalUrl)){
     let fullUrl = `${req.originalUrl}/callback`;
-
-    console.log(fullUrl);
 
     passport.use(new GoogleStrategy({
       clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
@@ -50,8 +59,6 @@ app.use(async (req, res, next) => {
 });
 app.use(passport.initialize());
 app.use(passport.session());
-
-
 
 
 
@@ -128,18 +135,13 @@ app.get('/admin/auth/google/callback', passport.authenticate('google', { failure
 });
 
 // Rotta per visualizzare il profilo admin
-app.get('/adminProfile', (req, res) => {
+app.get('/adminProfile', async(req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect('/admin');
   }
   
   let profile=req.user;
-  var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "agorà"
-  });
+  
 
 
   con.connect(function(err) {
@@ -167,14 +169,12 @@ app.get('/adminProfile', (req, res) => {
           
         con.query(query,(err,result)=>{
           if (err) throw err;
-
-          console.log("Admin aggiornato");
         });
       }
       else{
         let query= `
           INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) 
-          VALUES (NOW(), NOW(), '"+profile.photos[0].value+"', '"+profile.emails[0].value+"', '"+profile.name.givenName+"', '"+profile.id+"', '"+profile.provider+"');
+          VALUES (NOW(), NOW(), '${profile.photos[0].value}', '${profile.emails[0].value}', '${profile.name.givenName}', '${profile.id}', '${profile.provider}');
           `;
               
         con.query(query,(err,result)=>{
@@ -237,10 +237,18 @@ app.get('/adminProfile', (req, res) => {
 
       
     });
+
   });
 
-  res.sendFile(__dirname + '/admin/admin.html');
 
+
+
+  req.session.user = profile;
+  
+  res.sendFile(__dirname + '/private/admin/logged.html');
+
+
+  //Socket
 
   //Check account nel DB 
   /*{
@@ -361,24 +369,70 @@ app.get('/adminProfile', (req, res) => {
 
 
 
+
+
+
+
 //Socket
-io.on('connection', async (socket) => {
-  console.log('user connected');
+io.on('connection', (socket) => { 
 
 
+    let profile = socket.request.session.user;
+    socket.emit('profile',profile.name.givenName,profile.name.familyName);
+    
+    socket.on('CreaRiunione', (titolo,descrizione) => {
 
-  socket.on('message', (msg) => {
-    console.log('received message:', msg);
-    io.emit('message', msg);
-  });
+      let query = "SELECT IDAdmin FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'"
+      con.query(query, (err,result)=> {
+        if (err) throw err;
 
+        let password = Math.random().toString(36).substring(2,7);
 
+        query = `INSERT INTO riunioni (Titolo, Descrizione, Password, IDAdmin) VALUES ('${titolo}', '${descrizione}', '${password}', '${result[0].IDAdmin}');`;
+          
+        con.query(query, (err, result)=> {
+          if (err) throw err;
+        });
+      });
+    });
+    
+    socket.on('TerminaRiunione', () => {
+        
+      let query = "SELECT IDAdmin FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'"
+      con.query(query, (err,result)=> {
+        if (err) throw err;
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-  
+        query = `DELETE FROM riunioni WHERE IDAdmin = ${result[0].IDAdmin};`;
+
+        con.query(query, (err, result)=> {
+          if (err) throw err;
+        });   
+      });
+
+    });
+    
+    socket.on('disconnect', () => {
+        
+    });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

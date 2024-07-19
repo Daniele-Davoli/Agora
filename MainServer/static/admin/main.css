@@ -1,32 +1,286 @@
+/*@font-face {
+    font-family: CustomFont;
+    src: url(./Font/dalekpinpointbold-webfont.woff);
+}*/
+:root{
+    --fontSize:3vh;
+    --googleBTN:3vh;
+}
 body{
     display: flex;
-    align-items: center;
     justify-content: center;
-
-    width: 100vw;
-    height: 100vh;
-
-    overflow: hidden;
-
-    background-color: rgb(33, 33, 33);
-}
-*{
-    padding: 0px;
-    margin: 0px;
-}
-.google-signin-button {
-    display: inline-block;
-    background: white;
-    color: #757575;
-    border: 1px solid #dadce0;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 10px 15px;
-    text-decoration: none;
-    display: flex;
     align-items: center;
-  }
-  .google-signin-button img {
-    margin-right: 10px;
-  }
+    overflow-y: scroll;
+    overflow-x: hidden;
+
+    height: 100vh;
+    width: 100%;
+    background-color: rgb(33, 33, 33);
+    margin: 0;
+}
+#Home{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+    height: 100vh;
+    background-color: rgb(30, 30, 30);
+}
+
+
+#Coin{
+    position: fixed;
+    background: transparent;
+    width: 100%;
+    z-index: 5;
+}
+#IconCoin{
+    pointer-events: none;
+    display: flex;
+    position: fixed;
+    background: transparent;
+    width: 99%;
+    z-index: 4;
+    opacity: 0.0;
+    border: 2px solid rgba(255, 255, 255, 0);
+}
+#IconCoin2{
+    pointer-events: none;
+    display: flex;
+    position: fixed;
+    background: transparent;
+    width: 99%;
+    z-index: 1;
+    opacity: 0.0;
+    border: 2px solid rgba(255, 255, 255, 0);
+}
+#Loading{
+    white-space: nowrap;
+    position: fixed;
+    z-index: 5;
+    background: transparent;
+    display: inline-block;
+    opacity: 0.0;
+    transform: translateY(12vh);
+}
+#Loading p{
+    pointer-events: none;
+    font-size: var(--fontSize);
+    font-family: 'CustomFont';
+    background: transparent;
+    float:left;
+
+    margin-right: 0.7vw;
+    margin-left: 4vw;
+
+    background: linear-gradient(
+                      90deg,
+                      white 40%,
+                      gold 50%,
+                      white 100%
+                    ) 0 0 / 240% 100%;
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+    
+    animation: Finiture 10s infinite reverse;
+    animation-delay: 2s;
+}
+.Loading{
+    pointer-events: none;
+    font-size: var(--fontSize);
+    font-family: 'CustomFont';
+    background: transparent;
+    float: right;
+    
+    margin-right: 0.5vw;
+
+    animation: Load 2s infinite ease-in-out,DotFiniture 10s infinite reverse;
+
+    color: rgb(230, 230, 230);
+}
+.Loading:nth-last-child(1){
+    animation-delay: 2.6s;
+}
+.Loading:nth-last-child(2){
+    animation-delay: 2.9s;
+}
+.Loading:nth-last-child(3){
+    margin-right: 0.6vw;
+    animation-delay: 3.2s;
+}
+
+#CoinClick{
+    position: fixed;
+    background: transparent;
+    width: 100%;
+    opacity: 0.0;
+}
+#IconClickEffect{
+    position: absolute;
+    z-index: 5;
+    width: calc(var(--fontSize)*8.5);
+    height: calc(var(--fontSize)*8.5);
+    border-radius: 100%;
+    cursor: default;
+    transform: translateY(-1vw);
+    background-color: transparent;
+    border: none;
+}
+#Effect{
+    opacity: 0.0;
+    z-index: 0;
+    display: flex;
+    position: absolute;
+    width: calc(var(--fontSize)*17);
+    height: calc(var(--fontSize)*17);
+    border-radius: 100%;
+    transform: translateY(-1vw);
+    /*border: 2px solid white;*/
+    justify-content: center;
+    align-items: center;
+
+    mask-image: radial-gradient(rgba(0, 0, 0, 1)40%, rgba(0, 0, 0, 0) 70%);
+    
+}
+#Circle{
+    width: 100%;
+    height: 100%;
+}
+
+#Press{
+    white-space: nowrap;
+    display: none;
+    pointer-events: none;
+    color: gold;
+    z-index:2;
+
+    font-family: 'CustomFont';
+    text-align: center;
+    width: auto;
+    height: auto;
+
+    transform: 
+    translateY(calc(var(--fontSize)*6))
+    translateX(calc(var(--fontSize)*0.1));
+
+    text-shadow: 0 0 10px gold;
+}
+#Press b{
+    opacity: 0.0;
+    color: rgb(122, 104, 0);
+    animation-delay: 0.1s;
+    animation-duration: 1.45s;
+    animation-name: Pulsazione;
+    animation-iteration-count: infinite;
+    margin-left: 2%;
+    margin-right: 2%;
+    text-shadow: 0 0 0 gold;
+}
+
+
+#Google_button{
+    opacity: 0.0;
+
+    display: none;
+    z-index: 2;
+    white-space: nowrap;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    height: auto;
+    border-radius: 15vw;
+    background-color: rgb(33, 33, 33);
+    border: 2px solid rgb(255, 255, 255);
+    color: white;
+    text-decoration: none;
+    scale: 35%;
+    cursor: pointer;
+
+    transform: 
+    perspective(2650px)
+    rotateX(25deg)
+    translateY(calc(var(--googleBTN)*-7.3))
+    scaleX(110%)
+    scaleY(110%);
+}
+#Google_button p{
+    background-color: transparent;
+    width: auto;
+    height: auto;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: calc(var(--googleBTN)*1.03);
+    padding-left: 0vw;
+    padding-right: 2vw;
+    padding-top: 1vw;
+    padding-bottom: 1vw;
+}
+#IconGoogle{
+    height:calc(var(--googleBTN)*3);
+    width: auto;
+    background-color: transparent;
+    padding-left: 1.5vw;
+    padding-right: 1vw;
+}
+
+
+@keyframes Load{
+    30%{
+            transform: translateY(-0.6vw);
+            
+        }
+    60%{
+            transform: translateY(0vw);
+            
+        }    
+}
+@keyframes DotFiniture {
+    30% {
+        color: rgb(230, 230, 230);
+        text-shadow: none;
+      }
+    45%{
+        color: gold;
+        text-shadow: 0 0 10px gold;
+    }
+    60% {
+        color: rgb(230, 230, 230);
+        text-shadow: none;
+      }
+}
+@keyframes Finiture {
+    0% {
+        background-position: 0% 0;
+        text-shadow: none;
+      }
+    30% {
+        background-position: 0% 0;
+        text-shadow: none;
+      }
+    45%{
+        background-position: 50% 0;
+        text-shadow: 0 0 10px gold;
+    }
+    60% {
+        background-position: 170% 0;
+        text-shadow: none;
+      }
+    100% {
+        background-position: 170% 0;
+        text-shadow: none;
+      }
+}
+@keyframes Pulsazione {
+    0%{
+        opacity: 0.0;
+    }
+    50%{
+        opacity: 1.0;
+    }
+    100%{
+        opacity: 0.0;
+    }
+}
