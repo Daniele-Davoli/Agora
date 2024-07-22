@@ -1145,7 +1145,7 @@ body{
     font-size: 15vw;
     letter-spacing: 6vw;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-
+    text-transform: uppercase;
 
     background: linear-gradient(
                       90deg,

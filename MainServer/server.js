@@ -273,28 +273,88 @@ app.get('/adminProfile', async(req, res) => {
 //Socket
 io.on('connection', (socket) => { 
   if(socket.request.session.admin === true){
+    //Admin
     let profile = socket.request.session.user;
+    let timer;
+
     socket.emit('profile',profile.name.givenName,profile.name.familyName);
       
     console.log(profile.emails[0].value + ' connected')
 
     socket.on('CreaRiunione', (titolo,descrizione) => {
+      socket.join(socket.request.session.id);
+
       let query = "SELECT IDAdmin FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'"
       con.query(query, (err,result)=> {
         if (err) throw err;
 
-        let password = Math.random().toString(36).substring(2,7);
+        socket.request.session.IDAdmin= result[0].IDAdmin;
 
-        query = `INSERT INTO riunioni (Titolo, Descrizione, Password, IDAdmin) VALUES ('${titolo}', '${descrizione}', '${password}', '${result[0].IDAdmin}');`;
+        let password = Math.random().toString(36).substring(2,7);
+        socket.emit("password", password);
+
+        query = `INSERT INTO riunioni (IDRoom, Titolo, Descrizione, Password, IDAdmin) VALUES ('${socket.request.session.id}', '${titolo}', '${descrizione}', '${password}', '${result[0].IDAdmin}');`;
             
         con.query(query, (err, result)=> {
           if (err) throw err;
         });
+
+        timer=setInterval(()=>{
+          password = Math.random().toString(36).substring(2,7);
+          socket.emit("password", password);
+
+
+          let updatePasswordQuery = `UPDATE riunioni SET Password = '${password}' WHERE IDAdmin = '${result[0].IDAdmin}';`;
+          con.query(updatePasswordQuery, (err, result)=> {
+            if (err) throw err;
+          });
+        },15000);
+
       });
     });
+
+    socket.on("disableTV",()=>{
+      clearInterval(timer);
+
+      let updateTVStatus = `UPDATE riunioni SET TVStatus = 'false' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+        con.query(updateTVStatus, (err, result)=> {
+          if (err) throw err;
+        });
+    })
+    socket.on("activeTV",()=>{
+
+
+      let updateTVStatus = `UPDATE riunioni SET TVStatus = 'true' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+        con.query(updateTVStatus, (err, result)=> {
+          if (err) throw err;
+        });
+
+
+      password = Math.random().toString(36).substring(2,7);
+      socket.emit("password", password);
+
+
+      let updatePasswordQuery = `UPDATE riunioni SET Password = '${password}' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+      con.query(updatePasswordQuery, (err, result)=> {
+        if (err) throw err;
+      });
+
+      timer=setInterval(()=>{
+        password = Math.random().toString(36).substring(2,7);
+        socket.emit("password", password);
+
+
+        let updatePasswordQuery = `UPDATE riunioni SET Password = '${password}' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+        con.query(updatePasswordQuery, (err, result)=> {
+          if (err) throw err;
+        });
+      },15000);
+    })
       
     socket.on('TerminaRiunione', () => {
           
+      clearInterval(timer);
+
       let query = "SELECT IDAdmin FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'"
       con.query(query, (err,result)=> {
         if (err) throw err;
@@ -310,6 +370,14 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log(profile.emails[0].value + ' disconnected')
     });
+  }else{
+    //user
+
+
+
+
+
+    
   }
 });
 

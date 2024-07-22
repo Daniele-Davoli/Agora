@@ -80,6 +80,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("Nome").innerHTML = name;
         document.getElementById("Cognome").innerHTML = surname;
     });
+
+    socket.on("password", (password) => {
+        NumberUp(password);
+    });
 });
 
 window.onload = function(){
@@ -472,6 +476,7 @@ function NumberUp(Number=" "){
 
 }
 
+
 function clock(){
     clockHandle = setTimeout(function(){
         if(Secondi++ == 14){
@@ -620,7 +625,8 @@ function Spegni_Accendi(){
     var televisione=document.getElementById("BTNTV");
     TV=!TV;
     if(TV){
-        socket.send('{ "command" : "otp.start" }')
+        socket.emit("activeTV");
+
         document.getElementById("TV").addEventListener('click',TVClick);
         document.getElementById("TV").style.pointerEvents = "visible"
         televisione.style.boxShadow="0 0 10px red";
@@ -633,12 +639,13 @@ function Spegni_Accendi(){
         fontSize.style.setProperty('--TV', 'flex');
     }
     else{
+        socket.emit("disableTV");
+
         window.clearTimeout(clockHandle)
         document.getElementById("TV").removeEventListener('click',TVClick);
         timer.stop()
         timer.reset()
         document.getElementById("TV").style.pointerEvents = "none"
-        socket.send('{ "command" : "otp.stop" }')
         televisione.style.boxShadow="0 0 10px green";
         document.getElementById("SpegniTV").innerText="Accendi la TV!";
         document.getElementById("SpegniTV2").innerText="Permetterai di far unire le persone alla tua riunione";
