@@ -3,15 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/user/main.js"></script>
+    <title>Agorà</title>
+
+    <script src="https://accounts.google.com/gsi/client" async></script>
+
     <link rel="stylesheet" href="/user/main.css">
+    <script src="/user/main.js"></script>
 </head>
 <body>
-    <a class="google-signin-button" href="http://localhost/user/auth/google">
+    <video id="Coin" preload muted playsinline>
+        <source src="/user/userContent/Coin2.0.mp4" type="video/mp4">
+    </video>
+    <img id="IconCoin" src="/user/userContent/Coin.png">
+    <div id="Loading">
+        <p>Caricamento della riunione</p>
+        <h1 class="Loading">.</h1>
+        <h1 class="Loading">.</h1>
+        <h1 class="Loading">.</h1>
+    </div>
+
+    <div id="Sfocatura"></div>
+    <a id="Google_button" class="google-signin-button" href="user/auth/google">
         <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20">
         Sign In with Google
     </a>
+
+    <div id="Home">
+        <div id="table_ground">
+            <div id="table_back"></div>
+
+            <div id="banco">
+                <img id="foglio">
+            </div>
+        </div>
+    </div>
+    
 </body>
 </html>
+
+
+
+<!--
+
+
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="IT_it">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agorà</title>
+    <link rel="stylesheet" href="{% static 'login/login.css' %}">
+    {% if started %}
+    <script type="text/javascript" src="{% static 'login/login-started.js' %}"></script>
+    {% else %}
+    <script type="text/javascript" src="{% static 'login/login-notstarted.js' %}"></script>
+    {% endif %} 
+</head>
+<body>  
+
+    <video id="Coin" preload autoplay="autoplay" muted playsinline>
+        <source src="{% static 'login/Coin2.0.mp4' %}" type="video/mp4">
+    </video>
+    <img id="IconCoin" src="{% static 'login/Coin.png' %}">
+    <div id="Loading">
+        <p>Caricamento della riunione</p>
+        <h1 class="Loading">.</h1>
+        <h1 class="Loading">.</h1>
+        <h1 class="Loading">.</h1>
+    </div>
+
+    <div id="Sfocatura"></div>
+    <a href="{% provider_login_url 'google'%}?next=/" id="Google_button">
+        <img id="Icon" src="{% static 'login/Google_Logo.png' %}"> 
+        <p>Accedi con Google</p>
+    </a>
+
+    <div id="Home">
+        <div id="table_ground">
+            <div id="table_back"></div>
+
+            <div id="banco">
+                <img id="foglio">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+-->
