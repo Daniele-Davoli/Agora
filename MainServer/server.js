@@ -121,6 +121,11 @@ app.get('/:role/auth/google/callback', (req, res, next) => {
 
 
 
+
+
+
+
+
 //Users
 app.get('/',async(req, res) => {
   res.sendFile(__dirname + '/private/user/main.html');
@@ -169,34 +174,47 @@ app.get('/userProfile', async(req, res) => {
     }
   });
 
+  let queryID= `
+    SELECT id
+    FROM users
+    WHERE email = '${profile.emails[0].value}';
+  `;
 
-  req.session.user = profile;
-  req.session.admin = false;
-  req.session.authorized=false;
-  res.sendFile(__dirname + '/private/user/logged.html');
+  con.query(queryID,(err,result)=>{
+    if (err) throw err;
+    req.session.iduser=result[0].id;
+    req.session.user = profile;
+    req.session.admin = false;
+    req.session.authorized=false;
+    res.sendFile(__dirname + '/private/user/logged.html');
+  });
+  
 });
 app.get('/user/joined', async(req, res) => {
   if(req.session.authorized === true){
+    let IDRiunione = `
+      SELECT IDRiunione
+      FROM riunioni
+      WHERE IDRoom = ${req.session.IDRoom};
+      `
+    con.query(IDRiunione, (err, result) => {
+      if(err) throw err;
+      let query = `
+        INSERT INTO listeutenti (Data_ora_ingresso, IDUtente, IDRiunione)
+        VALUES (NOW(),${req.session.iduser},${result[0].IDRiunione});
+        `;
+      con.query(query, (err, result) => {
+        if(err) throw err;
+      });
+    });
+    
+
     res.sendFile(__dirname + '/private/user/joined.html');
   }
   else{
     res.redirect('/');
   }
 }); 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -262,21 +280,6 @@ app.get('/adminProfile', async(req, res) => {
   res.sendFile(__dirname + '/private/admin/logged.html');
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -407,7 +410,7 @@ io.on('connection', (socket) => {
 
     }else{
       socket.on("Password",(pw,IDRoom) => {
-        let query = `SELECT COUNT(*) as num FROM riunioni WHERE IDRoom = '${IDRoom}' AND Password = '${pw}';`;
+        let query = `SELECT COUNT(*) as num FROM riunioni WHERE IDRoom = '${IDRoom}' AND Password = '${pw}' AND TVStatus = true;`;
         con.query(query, (err,result)=> {
           if (err) throw err;
   
