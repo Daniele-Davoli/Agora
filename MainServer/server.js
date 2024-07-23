@@ -37,32 +37,83 @@ app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
 
 
-passport.serializeUser((user, done) => {
+
+
+
+const userPassport = new passport.Passport();
+const adminPassport = new passport.Passport();
+
+
+userPassport.serializeUser((user, done) => {
   done(null, user);
 });
-passport.deserializeUser((obj, done) => {
+userPassport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
+adminPassport.serializeUser((user, done) => {
+  done(null, user);
+});
+adminPassport.deserializeUser((obj, done) => {
   done(null, obj);
 });
 
 
-app.use(async (req, res, next) => {
-  if((/^\/(user|admin)\/auth\/google$/).test(req.originalUrl)){
-    let fullUrl = `${req.originalUrl}/callback`;
+userPassport.use(new GoogleStrategy({
+  clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
+  clientSecret: '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',
+  callbackURL: 'http://localhost/user/auth/google/callback' // URL di default
+}, function(token, tokenSecret, profile, done) {
+  return done(null, profile);
+}));
+adminPassport.use(new GoogleStrategy({
+  clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
+  clientSecret: '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',
+  callbackURL: 'http://localhost/admin/auth/google/callback' // URL di default
+}, function(token, tokenSecret, profile, done) {
+  return done(null, profile);
+}));
 
-    passport.use(new GoogleStrategy({
-      clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
-      clientSecret: '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',
-      callbackURL: `${fullUrl}`
-    },function(token, tokenSecret, profile, done) {
-      //profile check
-          
-      return done(null, profile);
-    }));
+
+app.use(userPassport.initialize());
+app.use(userPassport.session());
+app.use(adminPassport.initialize());
+app.use(adminPassport.session());
+
+
+
+
+
+
+
+
+//Autentificazione
+app.get('/:role/auth/google', (req, res, next) => {
+  const role = req.params.role;
+  if (role === 'user') {
+    userPassport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  } else if(role === 'admin'){
+    adminPassport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  } else {
+    res.status(404).send('Not Found');
   }
-  next();
 });
-app.use(passport.initialize());
-app.use(passport.session());
+app.get('/:role/auth/google/callback', (req, res, next) => {
+  const role = req.params.role;
+  if (role === 'user') {
+    userPassport.authenticate('google', { failureRedirect: '/' })(req, res, next);
+  } else if(role === 'admin'){
+    adminPassport.authenticate('google', { failureRedirect: '/admin' })(req, res, next);
+  } else {
+    res.status(404).send('Not Found');
+  }
+}, (req, res) => {
+  const role = req.params.role;
+  if (role === 'user') {
+    res.redirect('/userProfile');
+  } else if (role === 'admin') {
+    res.redirect('/adminProfile');
+  }
+});
 
 
 
@@ -70,41 +121,18 @@ app.use(passport.session());
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-app.get('/',async (req, res) => {
+//Users
+app.get('/',async(req, res) => {
   res.sendFile(__dirname + '/private/user/main.html');
 });
 
-//Autentificazione USER
-app.get('/user/auth/google',passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/user/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }),(req, res) => {
-  // Autenticazione riuscita
-  res.redirect('/userProfile');
-});
-
 // Rotta per visualizzare il profilo utente
-app.get('/userProfile', (req, res) => {
+app.get('/userProfile', async(req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect('/');
   }
 
   let profile=req.user;
-
-
-
-
-
 
   con.query("SELECT COUNT(*) as num FROM users WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
     if (err) throw err;
@@ -147,8 +175,7 @@ app.get('/userProfile', (req, res) => {
   req.session.authorized=false;
   res.sendFile(__dirname + '/private/user/logged.html');
 });
-
-app.get('/user/joined', (req, res) => {
+app.get('/user/joined', async(req, res) => {
   if(req.session.authorized === true){
     res.sendFile(__dirname + '/private/user/joined.html');
   }
@@ -179,16 +206,9 @@ app.get('/user/joined', (req, res) => {
 
 
 
-
-app.get('/admin',async (req, res) => {
+//Admins
+app.get('/admin',async(req, res) => {
   res.sendFile(__dirname + '/private/admin/main.html');
-});
-
-//Autentificazione ADMIN
-app.get('/admin/auth/google',passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/admin/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }),(req, res) => {
-  // Autenticazione riuscita
-  res.redirect('/adminProfile');
 });
 
 // Rotta per visualizzare il profilo admin
