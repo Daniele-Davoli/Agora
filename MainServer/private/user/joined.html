@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="IT_it">
 <head>
@@ -6,22 +5,23 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agorà</title>
-    <link rel="stylesheet" href="/user/logged.css">
-    <script type="module" src="/user/logged.js"></script>
+    <link rel="stylesheet" href="/user/joined.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/user/joined.js"></script>
 </head>
 <body>
     <div id="loading-container" style="z-index: 100;">
         <div class="ring"></div>
-        <img class="ring-image" src="{% static 'index/logo_agora.png' %}" />
+        <img class="ring-image" src="/user/userContent/joined/logo_agora.png" />
     </div>
 
-        <img class="Coin" id="IconReference" src="{% static 'index/Coin.png' %}">
+        <img class="Coin" id="IconReference" src="/user/userContent/joined/Coin.png">
 
         <div id="bodypaper">
 
             <div id="paper">
 
-                <img src="{% static 'index/logo_darzo.png' %}" id="logo">
+                <img src="/user/userContent/joined/logo_darzo.png" id="logo">
         
                 <h1 id="TitoloRiunione">{{meeting_title}}</h1>
         
@@ -45,7 +45,7 @@
                 <div id="submit">
                     <input type="submit" value="ESCI" id="Riunione">
                     <div id="firmaimg">
-                        <img src="{% static 'index/Firma.png' %}" id="firmaimg2">
+                        <img src="/user/userContent/joined/Firma.png" id="firmaimg2">
                     </div>
                 </div>
             </div>

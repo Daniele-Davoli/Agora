@@ -1,10 +1,23 @@
 var fontSize, icon, risposta;
+let socket;
 
 //" risposta " è la variabile con la risposta al Kahoot
 //PopUp(Text); funzione per fare il kahoot [MASSIMO 150 CARATTERI]
 
 
+document.addEventListener("DOMContentLoaded", () => {
+    socket = io();
+
+    socket.on("InfoRiunione",(titolo,nome,cognome,descrizione) => {
+        document.getElementById("TitoloRiunione").innerHTML = titolo;
+        document.getElementById("Nome").innerHTML = nome;
+        document.getElementById("Cognome").innerHTML = cognome;
+        document.getElementById("descrizione").innerHTML = descrizione;
+    })
+});
+
 window.onload = (event) => {
+    
 
     setTimeout(function(){
         document.getElementById("loading-container").style.animation="fadeout 1s linear";
@@ -37,46 +50,6 @@ window.onload = (event) => {
     window.addEventListener("resize", CoinResponsive);
 
     CoinResponsive();
-
-
-    let wsStart = 'ws://'
-    let endpoint = wsStart + window.location.host + "/ws"
-    let socket = new WebSocket(endpoint)
-
-
-    socket.onopen = function (e) { }
-
-    socket.onmessage = function (e) {
-        var event = JSON.parse(e.data)
-        switch (event['command']) {
-            case "poll.stop": {
-                document.getElementById("backPopUp").style.display = "none";
-                break;
-            }
-
-            case "poll.start": {
-                PopUp(event['question']);
-                break;
-            }
-
-            default:
-                break;
-        }
-    }
-    function Risposta(x) {
-        socket.send(`{ "command" : "poll.answer", "answer" : ${x} }`)
-        document.getElementById("backPopUp").style.display = "none";
-    }
-
-    function RispostaSicuro(x) {
-        if (x === 1) {
-            socket.send(`{ "command" : "logout" }`)
-            socket.close()
-            window.location.href = location.protocol + '//' + location.host + "/logout";
-        }
-    
-        document.getElementById("Sicuro").style.display = "none";
-    }
 }
 
 function CoinResponsive() {

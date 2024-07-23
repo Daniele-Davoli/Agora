@@ -7,7 +7,14 @@ var String="22222";
 document.addEventListener("DOMContentLoaded", () => {
     socket = io();
 
-    
+    socket.on("errPassword",() => {
+        document.getElementById("codice").value="";
+        document.getElementById("IDRoom").value="";
+    })
+
+    socket.on("redirect",() => {
+        window.location.pathname="/user/joined";
+    })
 });
 
 window.onload = function(){
@@ -55,10 +62,8 @@ function BackMovIn(){
         
         if(x.value.length==5){
             var x=document.getElementById("codice").value;
-            if(x===String)Agree();
-            else {
-                document.getElementById("codice").value = "";
-            }
+            var IDRoom=document.getElementById("IDRoom").value;
+            socket.emit("Password",x,IDRoom);
         }
       })
     }, 1000);
@@ -89,5 +94,4 @@ function CoinResponsive(){
 //************************************************************************
 
 function Agree(){
-    window.location = "https://www.youtube.com/";
 }

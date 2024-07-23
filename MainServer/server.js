@@ -30,7 +30,7 @@ app.use('/admin', express.static(__dirname + '/static/admin'));
 
 const sessionMiddleware = session({
   secret: "Agora2024",
-  resave: true,
+  resave: false,
   saveUninitialized: true,
 });
 app.use(sessionMiddleware);
@@ -144,8 +144,18 @@ app.get('/userProfile', (req, res) => {
 
   req.session.user = profile;
   req.session.admin = false;
+  req.session.authorized=false;
   res.sendFile(__dirname + '/private/user/logged.html');
 });
+
+app.get('/user/joined', (req, res) => {
+  if(req.session.authorized === true){
+    res.sendFile(__dirname + '/private/user/joined.html');
+  }
+  else{
+    res.redirect('/');
+  }
+}); 
 
 
 
@@ -365,6 +375,33 @@ io.on('connection', (socket) => {
     console.log('user: '+profile.emails[0].value + ' connected')
 
 
+    if(socket.request.session.authorized){
+
+      let queryInfo=`SELECT * FROM riunioni WHERE IDRoom = '${socket.request.session.IDRoom}'`;
+      con.query(queryInfo, (err,result)=> {
+        if (err) throw err;
+
+        socket.emit("InfoRiunione",result[0].Titolo,profile.name.givenName,profile.name.familyName,result[0].Descrizione)
+      });
+      socket.join(socket.request.session.IDRoom);
+
+    }else{
+      socket.on("Password",(pw,IDRoom) => {
+        let query = `SELECT COUNT(*) as num FROM riunioni WHERE IDRoom = '${IDRoom}' AND Password = '${pw}';`;
+        con.query(query, (err,result)=> {
+          if (err) throw err;
+  
+          if(result[0].num != 0){
+            socket.request.session.authorized = true;
+            socket.request.session.IDRoom = IDRoom;
+            socket.request.session.save();
+            socket.emit("redirect");
+          } else{
+            socket.emit("errPassword");
+          }
+        }); 
+      })
+    }
 
     socket.on('disconnect', () => {
       console.log(profile.emails[0].value + ' disconnected')
