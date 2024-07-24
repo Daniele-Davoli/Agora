@@ -76,6 +76,12 @@ let socket;
 document.addEventListener("DOMContentLoaded", () => {
     socket = io();
 
+    socket.emit("granted");
+    socket.on("yes", () => {
+        socket.emit("CreaRiunione");
+    })
+
+
     socket.on("profile", (name,surname) => {
         document.getElementById("Nome").innerHTML = name;
         document.getElementById("Cognome").innerHTML = surname;
@@ -84,7 +90,14 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("password", (password) => {
         NumberUp(password);
     });
+
+    socket.on("granted", () => {
+        AnimationDesc();
+    });
 });
+
+window.onbeforeunload = function(){
+}
 
 window.onload = function(){
     new FontFace('CustomFont', 'url(/user/userContent/Font/dalekpinpointbold-webfont.woff) format("woff2")').load().then(function(loaded_face) {

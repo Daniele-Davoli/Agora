@@ -225,7 +225,18 @@ app.get('/user/joined', async(req, res) => {
 
 
 //Admins
-app.get('/admin',async(req, res) => {
+app.get('/admin',(req, res) => {
+  /*if(req.session.listener==undefined){
+    console.log("Listener Creator");
+    req.sessionStore.on('destroy', (sessionId) => {
+      if (sessionId === req.sessionID) {
+        console.log(`La sessione con ID ${sessionId} è stata distrutta`);
+      }
+    });
+    req.session.listener=true;
+  }*/
+  
+
   res.sendFile(__dirname + '/private/admin/main.html');
 });
 
@@ -304,6 +315,12 @@ io.on('connection', (socket) => {
       
     console.log("admin: "+profile.emails[0].value + ' connected')
 
+    socket.on("granted", () => {
+      if(socket.request.session.riunione === true){
+        socket.emit("yes");
+      }
+    })
+
     socket.on('CreaRiunione', (titolo,descrizione) => {
       socket.join(socket.request.session.id);
 
@@ -315,12 +332,24 @@ io.on('connection', (socket) => {
 
         let password = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
         socket.emit("password", password);
-
-        query = `INSERT INTO riunioni (IDRoom, Titolo, Descrizione, Password, IDAdmin) VALUES ('${socket.request.session.id}', '${titolo}', '${descrizione}', '${password}', '${result[0].IDAdmin}');`;
+        socket.emit("granted");
             
-        con.query(query, (err, result)=> {
-          if (err) throw err;
-        });
+        if(socket.request.session.riunione === true){
+          query = `UPDATE riunioni SET Password = '${password}', TVStatus = 'true' WHERE IDRoom = '${socket.request.session.id}'`
+        
+          con.query(query, (err, result)=> {
+            if (err) throw err;
+          });
+        }else{
+          query = `INSERT INTO riunioni (IDRoom, Titolo, Descrizione, Password, DataInizio, IDAdmin) VALUES ('${socket.request.session.id}', '${titolo}', '${descrizione}', '${password}', NOW(), '${result[0].IDAdmin}');`;
+
+          con.query(query, (err, result)=> {
+            if (err) throw err;
+
+            socket.request.session.riunione=true;
+            socket.request.session.save();
+          });
+        }
 
         timer=setInterval(()=>{
           password = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
@@ -382,7 +411,10 @@ io.on('connection', (socket) => {
       con.query(query, (err,result)=> {
         if (err) throw err;
 
-        query = `DELETE FROM riunioni WHERE IDAdmin = ${result[0].IDAdmin};`;
+        query = `
+          UPDATE riunioni 
+          SET DataFine = NOW()
+          WHERE IDAdmin = ${result[0].IDAdmin};`;
 
         con.query(query, (err, result)=> {
           if (err) throw err;
@@ -391,8 +423,12 @@ io.on('connection', (socket) => {
     });
       
     socket.on('disconnect', () => {
+        clearInterval(timer);
         console.log(profile.emails[0].value + ' disconnected')
     });
+    socket.on('delete', () => {
+      console.log("ciao");
+  });
   }else if(socket.request.session.admin === false){
     //user
     console.log('user: '+profile.emails[0].value + ' connected')
