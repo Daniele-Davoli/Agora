@@ -22,6 +22,13 @@ const con = mysql.createConnection({
 con.connect(function(err) {
   if (err) throw err;
 });
+let ChangeAllStatus = `
+  UPDATE admin
+  SET Status = 'Offline'
+`
+con.query(ChangeAllStatus,(err, result) => {
+  if(err) throw err;
+})
 
 
 app.use('/user', express.static(__dirname + '/static/user'));
@@ -245,51 +252,70 @@ app.get('/adminProfile', async(req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect('/admin');
   }
-  
   let profile=req.user;
-  
-  
-  con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
-    if (err) throw err;
 
-    if(result[0].num != 0 ){
-      let query = `
-        UPDATE users 
-        SET 
-          modified = NOW(),
-          picture = '${profile.photos[0].value}',
-          email = '${profile.emails[0].value}',
-          first_name = '${profile.name.givenName}',
-          oauth_uid = '${profile.id}',
-          oauth_provider = '${profile.provider}'
-        WHERE 
-          oauth_provider = '${profile.provider}' AND 
+  let CheckStatus = `
+    SELECT Status
+    FROM admin
+    WHERE oauth_provider = '${profile.provider}' AND 
           first_name = '${profile.name.givenName}' AND 
-          email = '${profile.emails[0].value}'
-        `;
-          
-      con.query(query,(err,result)=>{
-        if (err) throw err;
-      });
-    }
-    else{
-      let query= `
-        INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) 
-        VALUES (NOW(), NOW(), '${profile.photos[0].value}', '${profile.emails[0].value}', '${profile.name.givenName}', '${profile.id}', '${profile.provider}');
-        `;
-              
-      con.query(query,(err,result)=>{
+          email = '${profile.emails[0].value}'`
+  
+  con.query(CheckStatus, (err, result) => {
+    if(err) throw err;
+    if(result[0].Status === 'Online'){
+
+
+
+      return res.send('Errore, questo admin risulta già connesso');
+    }else{
+     
+      
+      
+      con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
         if (err) throw err;
 
-        console.log("Nuovo admin creato",);
-      }); 
+        if(result[0].num != 0 ){
+          let query = `
+            UPDATE admin 
+            SET 
+              modified = NOW(),
+              picture = '${profile.photos[0].value}',
+              email = '${profile.emails[0].value}',
+              first_name = '${profile.name.givenName}',
+              oauth_uid = '${profile.id}',
+              oauth_provider = '${profile.provider}',
+              Status = 'Online'
+            WHERE 
+              oauth_provider = '${profile.provider}' AND 
+              first_name = '${profile.name.givenName}' AND 
+              email = '${profile.emails[0].value}'
+            `;
+              
+          con.query(query,(err,result)=>{
+            if (err) throw err;
+          });
+        }
+        else{
+          let query= `
+            INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) 
+            VALUES (NOW(), NOW(), '${profile.photos[0].value}', '${profile.emails[0].value}', '${profile.name.givenName}', '${profile.id}', '${profile.provider}');
+            `;
+                  
+          con.query(query,(err,result)=>{
+            if (err) throw err;
+
+            console.log("Nuovo admin creato",);
+          }); 
+        }
+      });
+
+      req.session.user = profile;
+      req.session.admin = true;
+      res.sendFile(__dirname + '/private/admin/logged.html');
+    
     }
   });
-
-  req.session.user = profile;
-  req.session.admin = true;
-  res.sendFile(__dirname + '/private/admin/logged.html');
-
 });
 
 
@@ -318,6 +344,41 @@ io.on('connection', (socket) => {
     socket.on("granted", () => {
       if(socket.request.session.riunione === true){
         socket.emit("yes");
+      }else{
+
+        let query = `
+          SELECT IDAdmin
+          FROM admin
+          WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'
+          `
+        con.query(query,(err, results)=>{
+          if(err) throw err;
+
+          query =  ` 
+            SELECT COUNT(*) as num
+            FROM riunioni_attive
+            WHERE IDAdmin = '${results[0].IDAdmin}'
+            `;
+
+          socket.request.session.IDAdmin = results[0].IDAdmin;
+
+          con.query(query,(err, results)=>{
+            if(err) throw err;
+
+            if(results[0].num != 0){
+              query = `
+                UPDATE riunioni_attive
+                SET DataFine = NOW(), Validità = 'false'
+                WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+
+              con.query(query, (err, result)=> {
+                  if (err) throw err;
+
+                  console.log("Riunione invalida creata!");
+              });  
+            }
+          });
+        });
       }
     })
 
@@ -335,7 +396,7 @@ io.on('connection', (socket) => {
         socket.emit("granted");
             
         if(socket.request.session.riunione === true){
-          query = `UPDATE riunioni SET Password = '${password}', TVStatus = 'true' WHERE IDRoom = '${socket.request.session.id}'`
+          query = `UPDATE riunioni_attive SET Password = '${password}', TVStatus = 'true' WHERE IDRoom = '${socket.request.session.id}'`
         
           con.query(query, (err, result)=> {
             if (err) throw err;
@@ -356,7 +417,7 @@ io.on('connection', (socket) => {
           socket.emit("password", password);
 
 
-          let updatePasswordQuery = `UPDATE riunioni SET Password = '${password}' WHERE IDAdmin = '${result[0].IDAdmin}';`;
+          let updatePasswordQuery = `UPDATE riunioni_attive SET Password = '${password}' WHERE IDRoom = '${socket.request.session.id}'`;
           con.query(updatePasswordQuery, (err, result)=> {
             if (err) throw err;
           });
@@ -368,7 +429,7 @@ io.on('connection', (socket) => {
     socket.on("disableTV",()=>{
       clearInterval(timer);
 
-      let updateTVStatus = `UPDATE riunioni SET TVStatus = 'false' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+      let updateTVStatus = `UPDATE riunioni_attive SET TVStatus = 'false' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
         con.query(updateTVStatus, (err, result)=> {
           if (err) throw err;
         });
@@ -376,7 +437,7 @@ io.on('connection', (socket) => {
     socket.on("activeTV",()=>{
 
 
-      let updateTVStatus = `UPDATE riunioni SET TVStatus = 'true' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+      let updateTVStatus = `UPDATE riunioni_attive SET TVStatus = 'true' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
         con.query(updateTVStatus, (err, result)=> {
           if (err) throw err;
         });
@@ -386,7 +447,7 @@ io.on('connection', (socket) => {
       socket.emit("password", password);
 
 
-      let updatePasswordQuery = `UPDATE riunioni SET Password = '${password}' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+      let updatePasswordQuery = `UPDATE riunioni_attive SET Password = '${password}' WHERE IDRoom = '${socket.request.session.id}'`;
       con.query(updatePasswordQuery, (err, result)=> {
         if (err) throw err;
       });
@@ -396,7 +457,7 @@ io.on('connection', (socket) => {
         socket.emit("password", password);
 
 
-        let updatePasswordQuery = `UPDATE riunioni SET Password = '${password}' WHERE IDAdmin = '${socket.request.session.IDAdmin}';`;
+        let updatePasswordQuery = `UPDATE riunioni_attive SET Password = '${password}' WHERE IDRoom = '${socket.request.session.id}'`;
         con.query(updatePasswordQuery, (err, result)=> {
           if (err) throw err;
         });
@@ -407,23 +468,31 @@ io.on('connection', (socket) => {
           
       clearInterval(timer);
 
-      let query = "SELECT IDAdmin FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'"
-      con.query(query, (err,result)=> {
-        if (err) throw err;
+      
+      query = `
+        UPDATE riunioni_attive
+        SET DataFine = NOW()
+        WHERE IDRoom = '${socket.request.session.id}';`;
 
-        query = `
-          UPDATE riunioni 
-          SET DataFine = NOW()
-          WHERE IDAdmin = ${result[0].IDAdmin};`;
-
-        con.query(query, (err, result)=> {
+      con.query(query, (err, result)=> {
           if (err) throw err;
-        });   
-      });
+      });   
     });
       
     socket.on('disconnect', () => {
         clearInterval(timer);
+
+        let query = `
+          UPDATE admin 
+          SET Status = 'Offline' 
+          WHERE oauth_provider = '${profile.provider}' AND 
+                first_name = '${profile.name.givenName}' AND 
+                email = '${profile.emails[0].value}'
+          `;
+        con.query(query, (err, result)=> {
+          if (err) throw err;
+        });
+
         console.log(profile.emails[0].value + ' disconnected')
     });
     socket.on('delete', () => {

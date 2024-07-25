@@ -88,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     socket.on("password", (password) => {
+        timer.reset();
         NumberUp(password);
     });
 
