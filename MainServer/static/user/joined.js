@@ -29,7 +29,8 @@ window.onload = (event) => {
     document.getElementById("Riunione").addEventListener('click', Submit);
 
     document.getElementById("siSicuro").addEventListener('click', function () {
-        RispostaSicuro(1);
+        socket.emit("logout");
+        window.location.pathname="/";
     });
     document.getElementById("noSicuro").addEventListener('click', function () {
         RispostaSicuro(2);
@@ -118,5 +119,5 @@ function PopUp(question = "") {
 
 
 function Submit() {
-    document.getElementById("Sicuro").style.display = "flex";
+    document.getElementById("Sicuro").style.display = "flex"; 
 }

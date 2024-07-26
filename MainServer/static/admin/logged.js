@@ -92,6 +92,10 @@ document.addEventListener("DOMContentLoaded", () => {
         NumberUp(password);
     });
 
+    socket.on("logout", () => {
+        window.location.href="/admin/auth/google";
+    })
+
     socket.on("granted", () => {
         AnimationDesc();
     });
@@ -165,6 +169,10 @@ window.onload = function(){
             else element.style.display="none";
         });
     });
+
+    document.getElementById("Google_button").addEventListener("click", function(event) {
+        socket.emit("logout");
+    })
 
     CoinResponsive();
     /*socket.onopen = function (e) {}

@@ -15,6 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("redirect",() => {
         window.location.pathname="/user/joined";
     })
+
+    socket.on("logout",() => {
+        socket.close();
+        window.location.pathname="/";
+    })
 });
 
 window.onload = function(){

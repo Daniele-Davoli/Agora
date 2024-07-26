@@ -144,7 +144,7 @@ body{
     border-radius: 0.4vw;
     background-color: rgba(33, 33, 33, 0.1);
     border: 1px solid rgba(0, 0, 0, 0.5);
-    pointer-events: none;
+    cursor: pointer;
 }
 .Information{
     position: relative;

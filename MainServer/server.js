@@ -119,6 +119,8 @@ app.get('/:role/auth/google/callback', (req, res, next) => {
     res.redirect('/userProfile');
   } else if (role === 'admin') {
     res.redirect('/adminProfile');
+  } else {
+    res.status(404).send('Not Found');
   }
 });
 
@@ -134,7 +136,7 @@ app.get('/:role/auth/google/callback', (req, res, next) => {
 
 
 //Users
-app.get('/',async(req, res) => {
+app.get('/',(req, res) => {
   res.sendFile(__dirname + '/private/user/main.html');
 });
 
@@ -201,8 +203,8 @@ app.get('/user/joined', async(req, res) => {
   if(req.session.authorized === true){
     let IDRiunione = `
       SELECT IDRiunione
-      FROM riunioni
-      WHERE IDRoom = ${req.session.IDRoom};
+      FROM riunioni_attive
+      WHERE IDRoom = '${req.session.IDRoom}';
       `
     con.query(IDRiunione, (err, result) => {
       if(err) throw err;
@@ -210,13 +212,13 @@ app.get('/user/joined', async(req, res) => {
         INSERT INTO listeutenti (Data_ora_ingresso, IDUtente, IDRiunione)
         VALUES (NOW(),${req.session.iduser},${result[0].IDRiunione});
         `;
+      req.session.IDRiunione = result[0].IDRiunione;
       con.query(query, (err, result) => {
         if(err) throw err;
+
+        res.sendFile(__dirname + '/private/user/joined.html');
       });
     });
-    
-
-    res.sendFile(__dirname + '/private/user/joined.html');
   }
   else{
     res.redirect('/');
@@ -231,19 +233,11 @@ app.get('/user/joined', async(req, res) => {
 
 
 
-//Admins
+//Admin
 app.get('/admin',(req, res) => {
-  /*if(req.session.listener==undefined){
-    console.log("Listener Creator");
-    req.sessionStore.on('destroy', (sessionId) => {
-      if (sessionId === req.sessionID) {
-        console.log(`La sessione con ID ${sessionId} è stata distrutta`);
-      }
-    });
-    req.session.listener=true;
-  }*/
-  
-
+  if (req.isAuthenticated()) {
+    return res.redirect('/adminProfile');
+  }
   res.sendFile(__dirname + '/private/admin/main.html');
 });
 
@@ -263,58 +257,46 @@ app.get('/adminProfile', async(req, res) => {
   
   con.query(CheckStatus, (err, result) => {
     if(err) throw err;
-    if(result[0].Status === 'Online'){
 
-
-
-      return res.send('Errore, questo admin risulta già connesso');
-    }else{
-     
-      
-      
-      con.query("SELECT COUNT(*) as num FROM admin WHERE oauth_provider = '"+profile.provider+"' AND email = '"+profile.emails[0].value+"'",(err,result)=>{
+    if(result[0]==undefined){
+      let query= `
+        INSERT INTO admin (modified, created, picture, email, first_name, last_name, oauth_uid, oauth_provider, Status) 
+        VALUES (NOW(), NOW(), ${(profile.photos[0].value==undefined)?"NULL":"'"+profile.photos[0].value+"'"}, '${profile.emails[0].value}', ${(profile.name.givenName==undefined)?"NULL":"'"+profile.name.givenName+"'"}, ${(profile.name.familyName==undefined)?"NULL":"'"+profile.name.familyName+"'"}, '${profile.id}', '${profile.provider}', 'Online');
+        `;
+              
+      con.query(query,(err,result)=>{
         if (err) throw err;
 
-        if(result[0].num != 0 ){
-          let query = `
-            UPDATE admin 
-            SET 
-              modified = NOW(),
-              picture = '${profile.photos[0].value}',
-              email = '${profile.emails[0].value}',
-              first_name = '${profile.name.givenName}',
-              oauth_uid = '${profile.id}',
-              oauth_provider = '${profile.provider}',
-              Status = 'Online'
-            WHERE 
-              oauth_provider = '${profile.provider}' AND 
-              first_name = '${profile.name.givenName}' AND 
-              email = '${profile.emails[0].value}'
-            `;
-              
-          con.query(query,(err,result)=>{
-            if (err) throw err;
-          });
-        }
-        else{
-          let query= `
-            INSERT INTO admin (modified, created, picture, email, first_name, oauth_uid, oauth_provider) 
-            VALUES (NOW(), NOW(), '${profile.photos[0].value}', '${profile.emails[0].value}', '${profile.name.givenName}', '${profile.id}', '${profile.provider}');
-            `;
-                  
-          con.query(query,(err,result)=>{
-            if (err) throw err;
-
-            console.log("Nuovo admin creato",);
-          }); 
-        }
+        console.log("Nuovo admin creato",);
+      }); 
+    }else if(result[0].Status === 'Online'){
+      return res.send('Errore, questo admin risulta già connesso. Controllare che non ci siano altre sorgenti collegate con il medesimo Account e ricaricare la pagina');
+    }else if(result[0].Status === 'Offline'){
+      let query = `
+        UPDATE admin 
+        SET 
+          modified = NOW(),
+          picture = ${(profile.photos[0].value==undefined)?"NULL":"'"+profile.photos[0].value+"'"},
+          email = '${profile.emails[0].value}',
+          first_name = ${(profile.name.givenName==undefined)?"NULL":"'"+profile.name.givenName+"'"},
+          last_name = ${(profile.name.familyName==undefined)?"NULL":"'"+profile.name.familyName+"'"},
+          oauth_uid = '${profile.id}',
+          oauth_provider = '${profile.provider}',
+          Status = 'Online'
+        WHERE 
+          oauth_provider = '${profile.provider}' AND 
+          first_name = '${profile.name.givenName}' AND 
+          email = '${profile.emails[0].value}'
+        `;
+                
+      con.query(query,(err,result)=>{
+        if (err) throw err;
       });
-
-      req.session.user = profile;
-      req.session.admin = true;
-      res.sendFile(__dirname + '/private/admin/logged.html');
-    
     }
+
+    req.session.user = profile;
+    req.session.admin = true;
+    res.sendFile(__dirname + '/private/admin/logged.html');
   });
 });
 
@@ -382,6 +364,11 @@ io.on('connection', (socket) => {
       }
     })
 
+    socket.on("logout", ()=>{
+      socket.emit("logout");
+      socket.disconnect();
+    })
+
     socket.on('CreaRiunione', (titolo,descrizione) => {
       socket.join(socket.request.session.id);
 
@@ -407,8 +394,19 @@ io.on('connection', (socket) => {
           con.query(query, (err, result)=> {
             if (err) throw err;
 
-            socket.request.session.riunione=true;
-            socket.request.session.save();
+            let IDRiunione = `
+            SELECT IDRiunione
+            FROM riunioni_attive
+            WHERE IDRoom = '${socket.request.session.id}';
+            `
+
+            con.query(IDRiunione, (err, result)=> {
+              if (err) throw err;
+            
+              socket.request.session.IDRiunione = result[0].IDRiunione;
+              socket.request.session.riunione=true;
+              socket.request.session.save();
+            });
           });
         }
 
@@ -465,17 +463,28 @@ io.on('connection', (socket) => {
     })
       
     socket.on('TerminaRiunione', () => {
-          
+
+      socket.request.session.riunione=false;
+      socket.request.session.save();
+
       clearInterval(timer);
 
-      
       query = `
         UPDATE riunioni_attive
         SET DataFine = NOW()
         WHERE IDRoom = '${socket.request.session.id}';`;
 
       con.query(query, (err, result)=> {
-          if (err) throw err;
+        if (err) throw err;
+
+        query = `
+          UPDATE listeutenti
+          SET Data_ora_uscita = NOW()
+          WHERE IDRiunione = ${socket.request.session.IDRiunione} AND Data_ora_uscita IS NULL
+        `;
+        con.query(query, (err, result)=> {
+            if (err) throw err;
+        });
       });   
     });
       
@@ -493,11 +502,8 @@ io.on('connection', (socket) => {
           if (err) throw err;
         });
 
-        console.log(profile.emails[0].value + ' disconnected')
+        console.log('admin: '+profile.emails[0].value + ' disconnected')
     });
-    socket.on('delete', () => {
-      console.log("ciao");
-  });
   }else if(socket.request.session.admin === false){
     //user
     console.log('user: '+profile.emails[0].value + ' connected')
@@ -505,7 +511,7 @@ io.on('connection', (socket) => {
 
     if(socket.request.session.authorized){
 
-      let queryInfo=`SELECT * FROM riunioni WHERE IDRoom = '${socket.request.session.IDRoom}'`;
+      let queryInfo=`SELECT * FROM riunioni_attive WHERE IDRoom = '${socket.request.session.IDRoom}'`;
       con.query(queryInfo, (err,result)=> {
         if (err) throw err;
 
@@ -515,24 +521,60 @@ io.on('connection', (socket) => {
 
     }else{
       socket.on("Password",(pw,IDRoom) => {
-        let query = `SELECT COUNT(*) as num FROM riunioni WHERE IDRoom = '${IDRoom}' AND Password = '${pw}' AND TVStatus = true;`;
+        let query = `SELECT COUNT(*) as num FROM riunioni_attive WHERE IDRoom = '${IDRoom}' AND Password = '${pw}' AND TVStatus = true;`;
         con.query(query, (err,result)=> {
           if (err) throw err;
   
           if(result[0].num != 0){
-            socket.request.session.authorized = true;
-            socket.request.session.IDRoom = IDRoom;
-            socket.request.session.save();
-            socket.emit("redirect");
+
+            let IDRiunione = `
+              SELECT IDRiunione
+              FROM riunioni_attive
+              WHERE IDRoom = '${IDRoom}';
+              `
+            con.query(IDRiunione, (err,result)=> {
+              if (err) throw err;
+
+              query = `
+                SELECT COUNT(*) as num
+                FROM listeutenti
+                WHERE IDRiunione = '${result[0].IDRiunione}' AND IDUtente = '${socket.request.session.iduser}'
+              `
+              console.log(query)
+              con.query(query, (err, result)=> {
+                if (err) throw err;
+                console.log(result)
+                if(result[0].num == 0){
+                  socket.request.session.authorized = true;
+                  socket.request.session.IDRoom = IDRoom;
+                  socket.request.session.save();
+                  socket.emit("redirect");
+                }else{
+                  socket.emit("logout");
+                }
+              });
+            });
           } else{
             socket.emit("errPassword");
           }
         }); 
       })
     }
+    socket.on("logout", ()=>{
+      query = `
+          UPDATE listeutenti
+          SET Data_ora_uscita = NOW()
+          WHERE IDRiunione = ${socket.request.session.IDRiunione} AND Data_ora_uscita IS NULL AND IDUtente = ${socket.request.session.iduser}
+        `;
+      con.query(query, (err, result)=> {
+        if (err) throw err;
+        
+        socket.disconnect();
+      });
+    })
 
     socket.on('disconnect', () => {
-      console.log(profile.emails[0].value + ' disconnected')
+      console.log('user: '+profile.emails[0].value + ' disconnected')
     });
   }
 });
