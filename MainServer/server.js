@@ -237,19 +237,24 @@ app.get('/:role/profile', async(req, res) => {
 
 app.get('/user/joined', async(req, res) => {
   if(req.session.authorized === true){
-    let query = `
-      INSERT INTO listeutenti (Data_ora_ingresso, IDUser, IDRiunione)
-      VALUES (NOW(),${req.session.IDRole},${req.session.IDRiunione});
-    `;
-    
-    con.query(query, (err, result) => {
-      if(err) ErrorHandler(err);
-
+    let query;
+    if(req.session.IsThereAnotherOne){
       res.sendFile(__dirname + '/private/user/joined.html');
-    });
+    }else{
+      query= `
+        INSERT INTO listeutenti (Data_ora_ingresso, IDUser, IDRiunione)
+        VALUES (NOW(),${req.session.IDRole},${req.session.IDRiunione});
+      `;
+      con.query(query, (err, result) => {
+        if(err) ErrorHandler(err);
+
+        res.sendFile(__dirname + '/private/user/joined.html');
+      });
+    }
+    
   }
   else{
-    res.redirect('/');
+    res.redirect('/user');
   }
 }); 
 
@@ -453,55 +458,80 @@ io.on('connection', (socket) => {
       //User
       let query;
 
-      if(socket.request.session.authorized){
-        let queryInfo=`SELECT * FROM riunioni_attive WHERE IDRoom = '${socket.request.session.IDRoom}'`;
-        con.query(queryInfo, (err,result)=> {
-          if (err) ErrorHandler(err);
-  
-          socket.emit("InfoRiunione",result[0].Titolo,profile.name.givenName,profile.name.familyName,result[0].Descrizione)
-        });
-        socket.join(socket.request.session.IDRoom);
-  
-      }else{
-        socket.on("Password",(pw,IDRoom) => {
-          let query = `SELECT COUNT(*) as num FROM riunioni_attive WHERE IDRoom = '${IDRoom}' AND Password = '${pw}' AND TVStatus = true;`;
-          con.query(query, (err,result)=> {
-            if (err) ErrorHandler(err);
-    
-            if(result[0].num != 0){
-              socket.request.session.IDRoom = IDRoom;
-              let IDRiunione = `
-                SELECT IDRiunione
-                FROM riunioni_attive
-                WHERE IDRoom = '${IDRoom}';
-              `
-              con.query(IDRiunione, (err,result)=> {
-                if (err) ErrorHandler(err);
-                socket.request.session.IDRiunione = result[0].IDRiunione;
-  
-                query = `
-                  SELECT COUNT(*) as num
-                  FROM listeutenti
-                  WHERE IDRiunione = '${result[0].IDRiunione}' AND IDUser = '${socket.request.session.IDRole}'
-                `
-                con.query(query, (err, result)=> {
-                  if (err) ErrorHandler(err);
+      query = `
+        SELECT COUNT(*) as num , IDRiunione
+        FROM listeutenti
+        WHERE IDUser = ${socket.request.session.IDRole} AND Data_ora_uscita IS NULL
+      `
 
-                  if(result[0].num == 0){
-                    socket.request.session.authorized = true;
-                    socket.request.session.save();
-                    socket.emit("redirect");
-                  }else{
-                    socket.emit("logout");
-                  }
+      con.query(query, (err, result)=> {
+        if (err) ErrorHandler(err);
+
+        console.log(result[0]);
+
+        if(socket.request.session.authorized || result[0].num != 0){
+          console.log("entra pure");
+          socket.emit("redirect");
+
+          if(result[0].num != 0) socket.request.session.IsThereAnotherOne = true;
+
+          socket.request.session.authorized=true;
+          socket.request.session.IDRiunione = result[0].IDRiunione;
+
+          let queryInfo=`SELECT * FROM riunioni_attive WHERE IDRiunione = '${socket.request.session.IDRiunione}'`;
+          con.query(queryInfo, (err,result)=> {
+            if (err) ErrorHandler(err);
+
+            socket.request.session.IDRoom=result[0].IDRoom;
+            socket.request.session.save();
+
+            socket.emit("InfoRiunione",result[0].Titolo,profile.name.givenName,profile.name.familyName,result[0].Descrizione)
+            socket.join(socket.request.session.IDRoom);
+          });
+    
+        }else{
+          socket.on("Password",(pw,IDRoom) => {
+            let query = `SELECT COUNT(*) as num FROM riunioni_attive WHERE IDRoom = '${IDRoom}' AND Password = '${pw}' AND TVStatus = true;`;
+            con.query(query, (err,result)=> {
+              if (err) ErrorHandler(err);
+      
+              if(result[0].num != 0){
+                socket.request.session.IDRoom = IDRoom;
+                let IDRiunione = `
+                  SELECT IDRiunione
+                  FROM riunioni_attive
+                  WHERE IDRoom = '${IDRoom}';
+                `
+                con.query(IDRiunione, (err,result)=> {
+                  if (err) ErrorHandler(err);
+                  socket.request.session.IDRiunione = result[0].IDRiunione;
+    
+                  query = `
+                    SELECT COUNT(*) as num
+                    FROM listeutenti
+                    WHERE IDRiunione = '${result[0].IDRiunione}' AND IDUser = '${socket.request.session.IDRole}'
+                  `
+                  con.query(query, (err, result)=> {
+                    if (err) ErrorHandler(err);
+  
+                    if(result[0].num == 0){
+                      socket.request.session.authorized = true;
+                      socket.request.session.save();
+                      socket.emit("redirect");
+                    }else{
+                      socket.emit("logout");
+                    }
+                  });
                 });
-              });
-            }else{
-              socket.emit("errPassword");
-            }
-          }); 
-        })
-      }
+              }else{
+                socket.emit("errPassword");
+              }
+            }); 
+          })
+        }
+      });
+
+      
 
       socket.on("logout", ()=>{
         query = `
@@ -516,7 +546,15 @@ io.on('connection', (socket) => {
         });
       })
       socket.on('disconnect', () => {
-        //Disconnected
+        let query = `
+          UPDATE users
+          SET Status = 'Offline' 
+          WHERE oauth_provider = '${profile.provider}' AND 
+                email = '${profile.emails[0].value}'
+        `;
+        con.query(query, (err, result)=> {
+          if (err) ErrorHandler(err);
+        });
       });
     }
   });
