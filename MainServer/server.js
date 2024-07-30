@@ -5,6 +5,7 @@ const session = require('express-session');
 const mysql = require('mysql'); 
 const { createServer } = require('node:http');
 const { Server } = require('socket.io');
+const { cpSync } = require('node:fs');
 
 const app = express();
 const server = createServer(app);
@@ -220,6 +221,8 @@ app.get('/:role/profile', async(req, res) => {
     }
     req.session.user = profile;
     req.session.role = role;
+    req.session.whitelist.domain = [];
+    req.session.whitelist.users = [];
     res.sendFile(__dirname + `/private/${(role === "admin")?"admin":"user"}/logged.html`);
   });
 });
@@ -236,26 +239,39 @@ app.get('/:role/profile', async(req, res) => {
 
 
 app.get('/user/joined', async(req, res) => {
-  if(req.session.authorized === true){
-    let query;
-    if(req.session.IsThereAnotherOne){
-      res.sendFile(__dirname + '/private/user/joined.html');
-    }else{
-      query= `
-        INSERT INTO listeutenti (Data_ora_ingresso, IDUser, IDRiunione)
-        VALUES (NOW(),${req.session.IDRole},${req.session.IDRiunione});
-      `;
-      con.query(query, (err, result) => {
-        if(err) ErrorHandler(err);
 
+  let CheckStatus = `
+    SELECT Status
+    FROM users
+    WHERE oauth_provider = '${req.session.user.provider}' AND
+        email = '${req.session.user.emails[0].value}'
+  `
+  
+  con.query(CheckStatus, (err, result) => {
+    if(err) ErrorHandler(err);
+
+
+    if(req.session.authorized === true && result[0].Status === "Offline"){
+      let query;
+      if(req.session.IsThereAnotherOne){
         res.sendFile(__dirname + '/private/user/joined.html');
-      });
+      }else{
+        query= `
+          INSERT INTO listeutenti (Data_ora_ingresso, IDUser, IDRiunione)
+          VALUES (NOW(),${req.session.IDRole},${req.session.IDRiunione});
+        `;
+        con.query(query, (err, result) => {
+          if(err) ErrorHandler(err);
+
+          res.sendFile(__dirname + '/private/user/joined.html');
+        });
+      }
+      
     }
-    
-  }
-  else{
-    res.redirect('/user');
-  }
+    else{
+      res.redirect('/user');
+    }
+  });
 }); 
 
 
@@ -332,6 +348,35 @@ io.on('connection', (socket) => {
           });
         }
       });
+
+      socket.on("WhitelistAdd",(email)=>{
+
+        if (email.startsWith('@')) {
+          socket.request.session.whitelist.domain.push(email);
+        } else {
+          socket.request.session.whitelist.users.push(email);
+        }
+      })
+
+      socket.on("WhitelistRemove",(email)=>{
+
+        if (email.startsWith('@')) {
+          query = `
+            DELETE FROM whitelist
+            WHERE IDRiunione = ${socket.request.session.IDRiunione} AND Domain = '${email}'
+          `
+        } else {
+          query = `
+            DELETE FROM whitelist
+            WHERE IDRiunione = ${socket.request.session.IDRiunione} AND Email = '${email}'
+          `
+        }
+
+        con.query(query,(err,result)=>{
+          if (err) ErrorHandler(err);
+        });
+        
+      })
 
       socket.on('CreaRiunione', (titolo,descrizione) => {
         socket.join(socket.request.session.id);
@@ -437,6 +482,34 @@ io.on('connection', (socket) => {
         },15000);
       })
 
+      socket.on("Domanda",(msg)=>{
+
+        io.to(socket.request.session.id).emit("StopDomanda");
+
+        query= `
+          INSERT INTO domande(Testo,DataInizio,IDRiunione)
+          VALUES ('${msg}', NOW(), ${socket.request.session.IDRiunione});
+        `
+        con.query(query, (err, result)=> {
+          if (err) ErrorHandler(err); 
+
+          io.to(socket.request.session.id).emit("Domanda", msg, result.insertId);
+        });
+      })
+
+      socket.on("StopDomanda",()=>{
+        io.to(socket.request.session.id).emit("StopDomanda");
+        query = `
+          UPDATE domande
+          SET DataFine = NOW()
+          WHERE IDRiunione = ${socket.request.session.IDRiunione} AND DataFine IS NULL
+        `;
+        con.query(query, (err, result)=> {
+          if (err) ErrorHandler(err);
+        });
+      });
+      
+
       socket.on("logout", ()=>{
         socket.emit("logout");
         socket.disconnect();
@@ -467,10 +540,10 @@ io.on('connection', (socket) => {
       con.query(query, (err, result)=> {
         if (err) ErrorHandler(err);
 
-        console.log(result[0]);
+        if(result[0].num != 0){
 
-        if(socket.request.session.authorized || result[0].num != 0){
-          console.log("entra pure");
+
+
           socket.emit("redirect");
 
           if(result[0].num != 0) socket.request.session.IsThereAnotherOne = true;
@@ -487,6 +560,27 @@ io.on('connection', (socket) => {
 
             socket.emit("InfoRiunione",result[0].Titolo,profile.name.givenName,profile.name.familyName,result[0].Descrizione)
             socket.join(socket.request.session.IDRoom);
+          });
+
+          socket.on("Risposta",(msg, idDomanda)=>{
+            query=`
+              SELECT COUNT(*) as num
+              FROM risposte
+              WHERE IDDomanda = ${idDomanda} AND IDUser = ${socket.request.session.IDRole}
+            `
+            con.query(query, (err, result)=> {
+              if (err) ErrorHandler(err);
+
+              if(result[0].num == 0){
+                query=`
+                  INSERT INTO risposte(Risposta, IDUser, IDDomanda)
+                  VALUES ('${msg}', ${socket.request.session.IDRole}, ${idDomanda});
+                `
+                con.query(query, (err, result)=> {
+                  if (err) ErrorHandler(err);
+                });
+              }
+            });
           });
     
         }else{
@@ -514,6 +608,8 @@ io.on('connection', (socket) => {
                   con.query(query, (err, result)=> {
                     if (err) ErrorHandler(err);
   
+                    
+
                     if(result[0].num == 0){
                       socket.request.session.authorized = true;
                       socket.request.session.save();
@@ -541,7 +637,8 @@ io.on('connection', (socket) => {
         `;
         con.query(query, (err, result)=> {
           if (err) ErrorHandler(err)
-          
+          socket.request.session.authorized=false;
+          socket.request.session.save();
           socket.disconnect();
         });
       })
@@ -559,7 +656,6 @@ io.on('connection', (socket) => {
     }
   });
 });
-
 
 
 

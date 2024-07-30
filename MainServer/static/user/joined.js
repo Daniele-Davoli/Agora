@@ -1,5 +1,5 @@
 var fontSize, icon, risposta;
-let socket;
+let socket, IDDomanda;
 
 //" risposta " è la variabile con la risposta al Kahoot
 //PopUp(Text); funzione per fare il kahoot [MASSIMO 150 CARATTERI]
@@ -14,6 +14,16 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("Cognome").innerHTML = cognome;
         document.getElementById("descrizione").innerHTML = descrizione;
     })
+
+    socket.on("Domanda",(msg,id)=>{
+        IDDomanda=id;
+        PopUp(msg);
+    })
+
+    socket.on("StopDomanda",()=>{
+        document.getElementById("backPopUp").style.display="none";
+        socket.emit("Risposta", "mi astengo",IDDomanda)
+    });
 });
 
 window.onload = (event) => {
@@ -51,6 +61,22 @@ window.onload = (event) => {
     window.addEventListener("resize", CoinResponsive);
 
     CoinResponsive();
+}
+
+function Risposta(value){
+    switch(value){
+        case 0:{
+            socket.emit("Risposta", "no",IDDomanda);
+        }break;
+        case 1:{
+            socket.emit("Risposta", "si",IDDomanda);
+        }break;
+        case 2:{
+            socket.emit("Risposta", "mi astengo",IDDomanda);
+        }break;
+    }
+
+    document.getElementById("backPopUp").style.display="none";
 }
 
 function CoinResponsive() {

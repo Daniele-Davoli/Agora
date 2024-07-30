@@ -73,6 +73,8 @@ let Numero="12345";
 let clockHandle;
 let socket;
 
+let flag=false;
+
 document.addEventListener("DOMContentLoaded", () => {
     socket = io();
 
@@ -387,7 +389,8 @@ function isAlreadyinWhitelist(user){
 function inputWL(){
     var String=document.getElementById("add").value;
     if(String !=" " && !isAlreadyinWhitelist(String)){
-        socket.send(`{ "command" : "whitelist.add", "user" : "${String}"}`)
+        socket.emit("WhitelistAdd",String)
+
         const div=document.createElement("li");
         const span=document.createElement("span");
         const XDiv=document.createElement("div")
@@ -408,7 +411,7 @@ function inputWL(){
         document.getElementById("add").value="";
 
         XDiv.addEventListener("click",function(){
-            socket.send(`{ "command" : "whitelist.remove", "user" : "${String}"}`)
+            socket.emit("WhitelistRemove",String)
             ElencoEmail.splice(ElencoEmail.indexOf(div), 1);
             div.remove();
         })
@@ -420,58 +423,63 @@ function inputWL(){
 }
 
 function AnimationDesc(){
-
     let title = document.getElementById('TitoloRiunione').value
     let description = document.getElementById('descrizione').value
     
-    table.classList.add("AnimazioneCrea");
-    document.getElementById("bodypaper").classList.add("AnimazioneCrea2");
+    if(flag==false){
+        flag=true;
 
-    setTimeout(function(){
-        document.getElementById("TV").addEventListener('click',TVClick);
-        document.getElementById("Info").style.transitionDuration="1s";
-        document.getElementById("Info").style.opacity="1.0";
+        table.classList.add("AnimazioneCrea");
+        document.getElementById("bodypaper").classList.add("AnimazioneCrea2");
+
         setTimeout(function(){
-            document.getElementById("paper").style.display="none";
-            document.getElementById("Info").style.transitionDuration="0s";
-            document.getElementById("Info").style.pointerEvents="visible";
-            document.getElementById("InfoClick").addEventListener('click',InfoClick);
-            document.getElementById("Indietro").addEventListener('click',InfoIndietro);
-            document.getElementById("close2").addEventListener('click',TVUnClick);
+            document.getElementById("TV").addEventListener('click',TVClick);
+            document.getElementById("Info").style.transitionDuration="1s";
+            document.getElementById("Info").style.opacity="1.0";
+            setTimeout(function(){
+                document.getElementById("paper").style.display="none";
+                document.getElementById("Info").style.transitionDuration="0s";
+                document.getElementById("Info").style.pointerEvents="visible";
+                document.getElementById("InfoClick").addEventListener('click',InfoClick);
+                document.getElementById("Indietro").addEventListener('click',InfoIndietro);
+                document.getElementById("close2").addEventListener('click',TVUnClick);
 
-            document.getElementById("InviaDomanda").addEventListener('click',function(){
-                let question = document.getElementById('descrizioneDomanda').value.replace(/[\n\r]+/g, ' ');
-                socket.send(`{"command" : "poll.start", "question" : "${question}"}`)
-                document.getElementById("descrizioneDomanda").value="";
-                document.getElementById('poll-no').innerHTML = "0"
-                document.getElementById('poll-yes').innerHTML = "0"
-                document.getElementById('poll-boh').innerHTML = "0"
-                document.getElementById("poll-started").style.visibility = "visible"
-                document.getElementById("StopDomanda").style.visibility = "visible"
-            })
+                document.getElementById("InviaDomanda").addEventListener('click',function(){
+                    let question = document.getElementById('descrizioneDomanda').value;
+                    socket.emit("Domanda",question);
 
-            document.getElementById("StopDomanda").addEventListener('click', function(){
-                socket.send(`{"command" : "poll.stop"}`)
-                document.getElementById("StopDomanda").style.visibility = "hidden"
-                document.getElementById("poll-started").style.visibility = "hidden"
-            })
+                    console.log("domanda");
+                    document.getElementById("descrizioneDomanda").value="";
+                    document.getElementById('poll-no').innerHTML = "0"
+                    document.getElementById('poll-yes').innerHTML = "0"
+                    document.getElementById('poll-boh').innerHTML = "0"
+                    document.getElementById("poll-started").style.visibility = "visible"
+                    document.getElementById("StopDomanda").style.visibility = "visible"
+                })
 
-            document.getElementById("InfoClick").addEventListener('mouseover',function(){
-                document.getElementById("Info").style.transitionDuration="0.2s"
-                document.getElementById("Info").style.filter="grayscale(100%)";
-                setTimeout(function(){
-                    document.getElementById("Info").style.transitionDuration="0s"
-                },500);
-            });
-            document.getElementById("InfoClick").addEventListener('mouseleave',function(){
-                document.getElementById("Info").style.transitionDuration="0.2s"
-                document.getElementById("Info").style.filter="grayscale(0%)";
-                setTimeout(function(){
-                    document.getElementById("Info").style.transitionDuration="0s"
-                },500);
-            });
-        },1000);
-    },1800);
+                document.getElementById("StopDomanda").addEventListener('click', function(){
+                    socket.emit("StopDomanda");
+                    document.getElementById("StopDomanda").style.visibility = "hidden"
+                    document.getElementById("poll-started").style.visibility = "hidden"
+                })
+
+                document.getElementById("InfoClick").addEventListener('mouseover',function(){
+                    document.getElementById("Info").style.transitionDuration="0.2s"
+                    document.getElementById("Info").style.filter="grayscale(100%)";
+                    setTimeout(function(){
+                        document.getElementById("Info").style.transitionDuration="0s"
+                    },500);
+                });
+                document.getElementById("InfoClick").addEventListener('mouseleave',function(){
+                    document.getElementById("Info").style.transitionDuration="0.2s"
+                    document.getElementById("Info").style.filter="grayscale(0%)";
+                    setTimeout(function(){
+                        document.getElementById("Info").style.transitionDuration="0s"
+                    },500);
+                });
+            },1000);
+        },1800);
+    }
 }
 
 function NumberUp(Number=" "){
