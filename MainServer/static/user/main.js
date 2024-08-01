@@ -1,97 +1,18 @@
-var coin, icon, timer, Transform, fontSize;
+var coin, icon, timer, Transform, fontSize, reload=false;
 
-window.onload = function(){
-    
-    
-
-    /*if(!window.location.hash) {
-        window.location = window.location + '#loaded';
-        window.location.reload();
-    }*/
-    
+window.onload = function(){ 
     new FontFace('CustomFont', 'url(/user/userContent/Font/dalekpinpointbold-webfont.woff) format("woff2")').load().then(function(loaded_face) {
         document.fonts.add(loaded_face)
     })
+
     coin=document.getElementById("Coin");
     icon=document.getElementById("IconCoin");
     timer=document.getElementById("Loading");
-    fontSize = document.querySelector(':root');
-
-    Transform="";
-
-    CoinResponsive();
 
     coin.addEventListener("timeupdate", Icon,false);
     coin.addEventListener("ended", CoinEnd);
-    window.addEventListener("resize", CoinResponsive);
-    
-    
-    
-    /*let wsStart = 'ws://'
-    let endpoint = wsStart + window.location.host + "/loading"
-    let socket = new WebSocket(endpoint)
-    socket.onopen = function(e){}
-    socket.onmessage = function (e) {
-        EndLoading()
-        socket.close()
-    }*/
-
 }
 
-
-function CoinResponsive(Tr=""){
-    if(Tr=="none")Transform="";
-    if(Tr!="[object Event]")Transform+=Tr;
-
-    
-
-    if(window.innerWidth<=500){
-        var temp=Transform;
-        if(Transform!="")temp+="h)";
-
-        coin.style.width="auto";
-        coin.style.height="100vh";
-        icon.style.width="auto";
-        icon.style.height="100vh";
-        icon.style.transform=temp;
-        coin.style.transform=temp;
-
-        fontSize.style.setProperty('--fontSize', '3vh');
-    }
-    else{
-        if(icon.offsetHeight <= window.innerHeight){
-            var temp=Transform;
-            if(Transform!="")temp+="w)";
-            
-            coin.style.width="auto";
-            coin.style.height="100vh";
-            icon.style.width="auto";
-            icon.style.height="100vh";
-
-            icon.style.transform=temp;
-            coin.style.transform=temp;
-
-            fontSize.style.setProperty('--fontSize', '5vh');
-        }
-        if(icon.offsetWidth <= window.innerWidth){
-            coin.style.width="99%";
-            coin.style.height="auto";
-            icon.style.width="99%";
-            icon.style.height="auto";
-
-            fontSize.style.setProperty('--fontSize', '2.7vw');
-
-            if(Transform!=""){
-                var temp=Transform+="h)";
-                icon.style.transform=temp;
-                coin.style.transform=temp;
-            }
-        }
-    }
-
-    document.getElementById("Coin").play();
-
-}
 
 function CoinEnd(){
 
@@ -100,31 +21,27 @@ function CoinEnd(){
 
     
     icon.style.transitionDuration="1s";
+    icon.style.backgroundSize="100vh";
+    icon.style.transform="translateY(-15%)";
     timer.style.transitionDelay="0.5s";
     timer.style.transitionDuration="1s";
     timer.style.opacity="1.0";
-    icon.style.scale="60%";
-    
-    CoinResponsive(" translateY(-20v");
-    setTimeout(Caricamento,1100);
+
+    setTimeout(Caricamento,1500);
 }
 
 function Icon(){
-
-
-    if(this.currentTime > this.duration-1){
+    if(this.currentTime > this.duration-0.5){
         icon.style.opacity="1.0";
         coin.removeEventListener("timeupdate", Icon,false);
-
     }
-
 }
 
 function Caricamento(){
     timer.style.transitionDuration="0s";
     timer.style.transitionDelay="0s";
     icon.style.transitionDuration="0s";
-    setTimeout(EndLoading,5000)
+    setTimeout(EndLoading,2000)
 }
 
 //********************************************************

@@ -1,52 +1,272 @@
-
-/*@font-face {
-    font-family: CustomFont;
-    src: url(/static/login/Font/dalekpinpointbold-webfont.woff);
-}*/
-:root{
-  --fontSize:3vh;
-}
 body{
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow-y: hidden;
-  overflow-x: hidden;
+  flex-direction: column;
 
   height: 100vh;
-  width: 100%;
+  width: 100vw;
   background-color: rgb(33, 33, 33);
-  margin: 0;
-  
 }
-::-webkit-scrollbar {
-  width: 0;
-  background: transparent; 
+*{
+  padding: 0px;
+  margin: 0px;
+}
+:root{
+  --prospettiva: 1200px;
+}
+
+
+
+#Sfocatura{
+  position: absolute;
+  display: none;
+  opacity: 0;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.4);
+
+  user-select: all;
+  pointer-events: all;
+
+  z-index: 100;
+}
+#Google_button{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: auto;
+  height: auto;
+  border-radius: 15vw;
+
+  white-space: nowrap;
+  background-color: rgb(33, 33, 33);
+  border: 2px solid rgb(255, 255, 255);
+  color: white;
+  text-decoration: none;
+
+  padding-left: 5%;
+  padding-right: 5%;
+  padding-top: 2%;
+  padding-bottom: 2%;
+}
+#Google_button p{
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: bold;
+  font-size: 5vw;
+
+  margin-left: 2.5%;
+}
+#Icon{
+  width: 10vw;
+  background-color: transparent;
+
+  margin-right: 2.5%;
+}
+
+
+#Home{
+  display: flex;
+  opacity: 0;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+  perspective: var(--prospettiva);
+
+  pointer-events: none;
+  user-select: none;
+
+  transform-style: preserve-3d;
+}
+#table_ground{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  
+  background-image: url("/user/userContent/ground2.png");
+  background-color: transparent;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top center;
+
+  height: 60%;
+  aspect-ratio: 9/4;
+  
+  transform-style:preserve-3d;
+
+  transform: 
+      translateY(20%)
+      translateX(-8.2%)
+      rotateX(90deg)
+      rotateZ(45deg);
+
+  /*
+  border: 1px solid red;
+  /**/
+}
+#table_back{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  
+  background-image: url("/user/userContent/back2.png");
+  background-color: transparent;
+  background-size:contain;
+  background-repeat: no-repeat;
+  background-position: bottom center;
+
+  height: 100%;
+  width: 100%;
+  
+  transform-style: preserve-3d;
+
+  user-select: none;
+  pointer-events: none;
+
+  transform: 
+      translateY(-50%)
+      rotateX(-90deg)    
+      translateY(-50%);
+
+
+  /*
+  background-color: rgba(255,255,255,0.5);
+  border: 2px solid white;
+  /**/
+}
+
+#ContainerBanco{
+  position: fixed;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  flex-direction: column;
+  
+  width: 100%;
+  height: 100%;
+
+  transform: translateZ(7vh);
+
+  transform-style:preserve-3d;
+
+}
+
+#banco{
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  
+  height:40%;
+  aspect-ratio: 8.9/4;
+
+  margin-top: 5%;
+
+  background-image: url("/user/userContent/texture2.2.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-position:center center;
+
+  transform-style: preserve-3d;
+
+  /*
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgb(255, 0, 0);
+  /**/
+}
+#banco::after{
+  position:absolute;
+  content: "";
+  background-color: #312413;
+  height: 4.5%;
+  width: 100%;
+  transform-origin: center center;
+  transform:
+      translateY(1107%)
+      rotateX(90deg)
+      translateY(-49%);
+
+  
+  
+  /*background-color: #ffffff;*/
+}
+#banco::before{
+  position:absolute;
+  content: "";
+  background-color: #312413;
+  height: 99.5%;
+  width: 2%;
+  transform-origin: center center;
+  transform:
+      translateX(2495%)
+      rotateY(90deg)
+      translateX(49%);
+  
+  /*background-color: #ffffff;*/
 }
 
 #Coin{
-  position: fixed;
-  background: transparent;
-  width: 100%;
-  z-index: 5;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+
+  z-index: 101;
 }
 #IconCoin{
+  position: absolute;
   display: flex;
-  position: fixed;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  background-image: url("/user/userContent/Coin.png");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 178vh;
+  
+  opacity: 0;
+  width: 100vw;
+  height: 100vh;
+
+  z-index: 102;
+}
+
+#Loading{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  opacity: 0;
+
+  white-space: nowrap;
   background: transparent;
-  width: 99%;
-  z-index: 4;
-  opacity: 0.0;
-  border: 2px solid rgba(255, 255, 255, 0);
+  
+  margin-top: 50vh;
 }
 #Loading p{
-  font-size: var(--fontSize);
+  font-size: min(6vw,40pt);    
   font-family: 'CustomFont';
   background: transparent;
   float:left;
-
-  margin-right: 0.7vw;
-  margin-left: 4vw;
 
   background: linear-gradient(
                     90deg,
@@ -57,21 +277,23 @@ body{
   color: transparent;
   background-clip: text;
   -webkit-background-clip: text;
-  
-  animation: Finiture 10s infinite reverse;
-  animation-delay: 2s;
+
+  animation: Finiture 10s infinite 0s;
+  animation-delay: 4s;
+
+  margin-right: 0.5%;
 }
 .Loading{
-  font-size: var(--fontSize);
   font-family: 'CustomFont';
   background: transparent;
   float: right;
+  font-size: min(6vw,40pt);
   
-  margin-right: 0.5vw;
-
-  animation: Load 2s infinite ease-in-out,DotFiniture 10s infinite reverse;
+  animation: Load 2s infinite ease-in-out, DotFiniture 10s infinite;
 
   color: rgb(230, 230, 230);
+
+  margin: 0.5%;
 }
 .Loading:nth-last-child(1){
   animation-delay: 2.6s;
@@ -80,45 +302,9 @@ body{
   animation-delay: 2.9s;
 }
 .Loading:nth-last-child(3){
-  margin-right: 0.6vw;
   animation-delay: 3.2s;
 }
 
-#Sfocatura{
-  display: none;
-  opacity: 0.0;
-}
-
-.google-signin-button {
-  display: inline-block;
-  background: white;
-  color: #757575;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 16px;
-  font-weight: 500;
-  padding: 10px 15px;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-}
-.google-signin-button img {
-  margin-right: 10px;
-}
-#Google_button{
-  display: none;
-  opacity: 0.0;
-}
-
-#Home{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width:100%;
-  height: 100%;
-  opacity: 0.0;
-}
 
 @keyframes Load{
   30%{
@@ -165,499 +351,4 @@ body{
       background-position: 170% 0;
       text-shadow: none;
     }
-}
-
-/*Telefono*/
-@media only screen and (max-width:500px){
-  #Loading{
-      white-space: nowrap;
-      position: fixed;
-      z-index: 5;
-      background: transparent;
-      display: inline-block;
-      opacity: 0.0;
-      transform: translateY(12vh);
-  }
-
-  #Google_button{
-      z-index: 2;
-      white-space: nowrap;
-      position: fixed;
-      justify-content: center;
-      align-items: center;
-      width: 80%;
-      height: auto;
-      border-radius: 15vw;
-      background-color: rgb(33, 33, 33);
-      border: 2px solid rgb(255, 255, 255);
-      color: white;
-      text-decoration: none;
-      transform: translateY(-15vw);
-  }
-  #Sfocatura{
-      z-index:2;
-      position: absolute;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(255, 255, 255, 0.4);
-  }
-  #Google_button p{
-      width: auto;
-      height: auto;
-      font-family: Verdana, Geneva, Tahoma, sans-serif;
-      font-weight: bold;
-      font-size: 5.8vw;
-      margin-left: 8%;
-  }
-  #Icon{
-      width: 22%;
-      background-color: transparent;
-      margin-top: 3%;
-      margin-bottom: 3%;
-  }
-  
-  /*TABLE PICTURE*/
-  #table_ground{
-      scale: 150%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position:fixed;
-
-      border: none;
-      padding: none;
-      margin-right: 25vw;
-      margin-top: 50vw;
-
-  
-      
-      background-image: url("/user/userContent/ground2.png");
-      background-color: transparent;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: top center;
-  
-  
-      width: 150%;
-      height: 66vw;
-  
-      
-  
-      z-index: 1;
-  
-      transform: 
-          perspective(1200px)
-          rotateX(75deg)
-          rotateY(0deg)   
-          rotateZ(40deg);
-  
-      transform-style:preserve-3d;
-  
-      
-  
-      /*
-      background-color: rgba(255, 0, 0, 0.5);
-      border: 2px solid white;
-      /**/
-  }
-  #table_back{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position:fixed;
-
-      border: none;
-      padding: none;
-      margin: 0px;
-      
-      background-image: url("/user/userContent/back2.png");
-      background-color: transparent;
-      background-size:contain;
-      background-repeat: no-repeat;
-      background-position: bottom center;
-  
-      width: 100%;
-      height:720px;
-  
-      right:100px;
-  
-  
-      transform:
-          translateX(100px)
-          translateY(-33vw)
-          translateZ(361px)
-          rotateX(-90deg);
-      
-      transform-style: preserve-3d;
-  
-      /*
-      background-color: rgba(255,255,255,0.5);
-      border: 2px solid white;
-      /**/
-  }
-  #banco{
-      position:fixed;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-  
-  
-      border: none;
-      padding: none;
-      margin: 0px;
-      
-      width: 100%;
-      height:100%;
-  
-      top: 0;
-      right: 0;
-  
-      background-position: center;
-      background-image: url("/user/userContent/texture2.2.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-color: transparent;
-      background-position:top center;
-  
-  
-      transform-style:preserve-3d;
-      transform: 
-          translateZ(8vw);
-  
-      /*
-      background-color: rgba(0, 0, 0, 0.5);
-      border: 2px solid rgb(255, 0, 0);
-      /**/
-  }
-  #banco::after{
-      position:fixed;
-      content: "";
-      background-color: #312413;
-      height: 23.5vw;
-      width: 1vw;
-      
-      transform: 
-          translateY(-11.8vw)
-          translateX(26.4vw)
-          translateZ(-0.4vw)
-          rotateY(90deg);
-      /*background-color: #ffffff;*/
-  }
-  #banco::before{
-      position:fixed;
-      content: "";
-      background-color: #271c03;
-
-      height: 1vw;
-      width: 52.4vw;
-      
-      transform: 
-          translateX(0.2vw)
-          translateY(0px)
-          translateZ(-0.4vw)
-          rotateX(90deg);
-      /*background-color: #ffffff;*/
-  }
-  #foglio{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-  
-      position:relative;
-      border: none;
-      padding: none;
-      margin: 0px;
-      
-      height:14%;
-      width: 13vw;
-  
-      z-index: 1;
-  
-      background-image: url("/user/userContent/firma.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-color: transparent;
-      background-position: center center;
-  
-      transform: translateY(-13vw);
-  }
-
-
-}
-/*Tablet*/
-@media only screen and (min-width:500px){
-  #Loading{
-      white-space: nowrap;
-      position: fixed;
-      z-index: 5;
-      background: transparent;
-      display: inline-block;
-      opacity: 0.0;
-      transform: translateY(calc(var(--fontSize)*3));
-  }
-  #Google_button{
-      z-index: 2;
-      white-space: nowrap;
-      position: fixed;
-      justify-content: center;
-      align-items: center;
-      width: auto;
-      height: auto;
-      border-radius: 15vw;
-      background-color: rgb(33, 33, 33);
-      border: 2px solid rgb(255, 255, 255);
-      color: white;
-      text-decoration: none;
-  }
-  #Sfocatura{
-      z-index:2;
-      position: absolute;
-      width: 100vw;
-      height: 150vh;
-      background-color: rgba(255, 255, 255, 0.4);
-  }
-  #Google_button p{
-      background-color: transparent;
-      width: auto;
-      height: auto;
-      font-family: Verdana, Geneva, Tahoma, sans-serif;
-      font-weight: bold;
-      font-size: 2.8vw;
-      padding-left: 0vw;
-      padding-right: 2vw;
-      padding-top: 1vw;
-      padding-bottom: 1vw;
-  }
-  #Icon{
-      height: 8vw;
-      width: auto;
-      background-color: transparent;
-      padding-left: 1.5vw;
-      padding-right: 1vw;
-  }
-
-   /*TABLE PICTURE*/
-   #table_ground{
-      scale: 150%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position:fixed;
-
-      border: none;
-      padding: none;
-      margin-right: 25vw;
-      margin-top: 50vw;
-
-  
-      
-      background-image: url("/user/userContent/ground2.png");
-      background-color: transparent;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: top center;
-  
-  
-      width: 150%;
-      height: 66vw;
-  
-      
-  
-      z-index: 1;
-  
-      transform: 
-          perspective(1200px)
-          rotateX(75deg)
-          rotateY(0deg)   
-          rotateZ(40deg);
-  
-      transform-style:preserve-3d;
-  
-      
-  
-      /*
-      background-color: rgba(255, 0, 0, 0.5);
-      border: 2px solid white;
-      /**/
-  }
-  #table_back{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position:fixed;
-
-      border: none;
-      padding: none;
-      margin: 0px;
-      
-      background-image: url("/user/userContent/back2.png");
-      background-color: transparent;
-      background-size:contain;
-      background-repeat: no-repeat;
-      background-position: bottom center;
-  
-      width: 100%;
-      height:112.5vw;
-  
-      right:100px;
-  
-  
-      transform:
-          translateX(100px)
-          translateY(-33vw)
-          translateZ(56.3vw)
-          rotateX(-90deg);
-      
-      transform-style: preserve-3d;
-  
-      /*
-      background-color: rgba(255,255,255,0.5);
-      border: 2px solid white;
-      /**/
-  }
-  #banco{
-      position:fixed;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-  
-  
-      border: none;
-      padding: none;
-      margin: 0px;
-      
-      width: 100%;
-      height:100%;
-  
-      top: 0;
-      right: 0;
-  
-      background-position: center;
-      background-image: url("/user/userContent/texture2.2.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-color: transparent;
-      background-position:top center;
-  
-  
-      transform-style:preserve-3d;
-      transform: 
-          translateZ(8vw);
-  
-      /*
-      background-color: rgba(0, 0, 0, 0.5);
-      border: 2px solid rgb(255, 0, 0);
-      /**/
-  }
-  #banco::after{
-      position:fixed;
-      content: "";
-      background-color: #312413;
-      height: 23.5vw;
-      width: 1vw;
-      
-      transform: 
-          translateY(-11.8vw)
-          translateX(26.4vw)
-          translateZ(-0.4vw)
-          rotateY(90deg);
-      /*background-color: #ffffff;*/
-  }
-  #banco::before{
-      position:fixed;
-      content: "";
-      background-color: #271c03;
-
-      height: 1vw;
-      width: 52.4vw;
-      
-      transform: 
-          translateX(0.25vw)
-          translateY(0px)
-          translateZ(-0.4vw)
-          rotateX(90deg);
-      /*background-color: #ffffff;*/
-  }
-  #foglio{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-  
-      position:relative;
-      border: none;
-      padding: none;
-      margin: 0px;
-      
-      height:14%;
-      width: 13vw;
-  
-      z-index: 1;
-  
-      background-image: url("/user/userContent/firma.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-color: transparent;
-      background-position: center center;
-  
-      transform: translateY(-13vw);
-
-  }
-}
-/*PC*/
-@media only screen and (min-width:1000px){
-  #Sfocatura{
-      z-index:2;
-      position: absolute;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(255, 255, 255, 0.4);
-  }
-  #banco::after{
-      position:fixed;
-      content: "";
-      background-color: #312413;
-      height: 23vw;
-      width: 1vw;
-      
-      transform: 
-          translateY(-12.1vw)
-          translateX(26.1vw)
-          translateZ(-0.4vw)
-          rotateY(90deg);
-      /*background-color: #ffffff;*/
-  }
-  #banco::before{
-      position:fixed;
-      content: "";
-      background-color: #271c03;
-
-      height: 1vw;
-      width: 52.4vw;
-      
-      transform: 
-          translateX(0vw)
-          translateY(-0.6vw)
-          translateZ(-0.4vw)
-          rotateX(90deg);
-      /*background-color: #ffffff;*/
-  }
-  #Google_button p{
-      background-color: transparent;
-      width: auto;
-      height: auto;
-      font-family: Verdana, Geneva, Tahoma, sans-serif;
-      font-weight: bold;
-      font-size: 2.8vw;
-      padding-left: 0vw;
-      padding-right: 2.5vw;
-      padding-top: 1vw;
-      padding-bottom: 1vw;
-  }
-  #Icon{
-      height: 8vw;
-      width: auto;
-      background-color: transparent;
-      padding-left: 3vw;
-      padding-right: 0vw;
-  }
 }

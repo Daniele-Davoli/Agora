@@ -1,102 +1,126 @@
-var sfocatura,google_button,fontSize,flag, k;
-
-//Inserire il POST con il Codice
-var String="22222";
-//Inserire il POST con il Codice
-
 document.addEventListener("DOMContentLoaded", () => {
     socket = io();
+    
 
     socket.on("errPassword",() => {
         document.getElementById("codice").value="";
-        document.getElementById("IDRoom").value="";
     })
 
     socket.on("redirect",() => {
-        window.location.pathname="/user/joined";
+        Agree();
     })
 
     socket.on("logout",() => {
         socket.close();
         window.location.pathname="/";
     })
+
+    socket.on("ListaRiunioni",(riunioni)=> {
+        const riunioniSelezione = document.getElementById("riunioni");
+
+        riunioni.forEach(riunione => {
+            const option = document.createElement("option");
+            option.value = riunione.IDRoom;
+            option.textContent = riunione.Titolo;
+            riunioniSelezione.appendChild(option);
+        });
+    })
 });
 
 window.onload = function(){
-    document.getElementById("codice").value = "";
-    k=0;
-    flag=false;
-    sfocatura=document.getElementById("Sfocatura");
-    google_button=document.getElementById("Google_button");
-    fontSize = document.querySelector(':root');
+    socket.emit("ListaRiunioni");
 
-    CoinResponsive();
+
+    document.getElementById('codice').value="";
+    document.getElementById('codice').addEventListener('input', function (e) {
+        let value = e.target.value;
+    
+        // Rimuovi qualsiasi carattere non numerico
+        value = value.replace(/\D/g, '');
+        e.target.value = value;
+
+        if(value.length == 5){
+            var IDRoom=document.getElementById("riunioni").value;
+            console.log(value);
+            socket.emit("Password",value,IDRoom);
+            //Agree();
+        }
+    });
+
+    let sfocatura=document.getElementById("Sfocatura");
 
     setTimeout(function(){
         sfocatura.style.transitionDuration="2s";
-        google_button.style.transitionDuration="2s";
-
         sfocatura.style.opacity="0.0";
-        google_button.style.opacity="0.0";
+
+        BackMovIn();
 
         setTimeout(function(){
             sfocatura.style.transitionDuration="0s";
-            google_button.style.transitionDuration="0s";
-            google_button.style.display="none";
-            document.getElementById("Home").style.zIndex="2";
-            BackMovIn();
+            sfocatura.style.display="none";
         },2000);
     },1000)
 }
 
 function BackMovIn(){
-    flag=true;
-    document.getElementById("table_ground").className="groundin";
+    let table = document.getElementById("table_ground");
+    let container = document.getElementById("ContainerBanco");
 
-    setTimeout(function(){document.getElementById("codice").addEventListener('keyup', (e) => {
-            
-        x=document.getElementById("codice");
+    table.style.transitionDuration="2s";
+    table.style.transitionTimingFunction="ease-in-out"
+    table.style.transform="translateX(-8.2%) rotateX(0deg) rotateZ(90deg)";
+    table.style.height="100%";
 
-        if(isNaN(x.value)){
-            var y="";
-            for(var i=0;i<x.value.length-1;i++){
-                y+=x.value[i];
-            }
-                document.getElementById("codice").value = y;
-        }
+    container.style.transitionDuration="2s";
+    container.style.transform="translateZ(11.6vh)";
+
+    
+
+    setTimeout(()=>{
+        table.style.transitionDuration="0s";
+        container.style.transitionDuration="0s";
+
+        document.getElementById("foglio").style.transitionDuration="1s";
+        document.getElementById("foglio").style.opacity="1";
+
+        setTimeout(function(){
+            document.getElementById("foglio").style.transitionDuration="0s";
         
-        if(x.value.length==5){
-            var x=document.getElementById("codice").value;
-            var IDRoom=document.getElementById("IDRoom").value;
-            socket.emit("Password",x,IDRoom);
-        }
-      })
-    }, 1000);
+            Help();
+        
+        },1000)
+    },2000)
 }
 
-function CoinResponsive(){
-    if(window.innerWidth<=500){
-        fontSize.style.setProperty('--zoom', '800%');
-        fontSize.style.setProperty('--table-width', '-4vw');
-        fontSize.style.setProperty('--table-height', '-11.8vw');
-    }
-    else if(window.innerWidth<=1000){
-        fontSize.style.setProperty('--zoom', '300%');
-        fontSize.style.setProperty('--table-width', '-8.5vw');
-        fontSize.style.setProperty('--table-height', '-9vw');
-    }
-    else{
-        fontSize.style.setProperty('--zoom', '200%');
-        fontSize.style.setProperty('--table-width', '-13vw');
-        fontSize.style.setProperty('--table-height', '-8vw');
-    }
+function Help(){
+    let riunioni= document.getElementById("riunioni");
+    let codice= document.getElementById("codice");
+
+    riunioni.addEventListener("click",function(){
+        riunioni.style.animation="none";
+
+        setTimeout(function(){
+            codice.style.animation="Lampeggio 1s infinite forwards";
+        },1000)
+    })
+
+    codice.addEventListener("click",function(){
+        codice.style.animation="none";
+    })
 }
-
-
 
 //************************************************************************
 //*Codice inserito correttamente e la pagina viene reindirizzata altrove *
 //************************************************************************
 
 function Agree(){
+    let table = document.getElementById("table_ground");
+
+    table.style.transitionDuration="1s";
+    table.style.transitionTimingFunction="ease-out";
+    table.style.scale="120%";
+
+    setTimeout(()=>{
+        window.location = "/user/joined";
+    },1000)
 }

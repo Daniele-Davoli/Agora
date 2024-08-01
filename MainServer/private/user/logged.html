@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ita">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,20 +10,32 @@
     <script type="text/javascript" src="/user/logged.js"></script>
 </head>
 <body>
-    <div id="Sfocatura"></div>
-    <div href="" id="Google_button">
-        <img id="Icon" src="/user/userContent/Google_Logo.png"> 
-        <p>Accedi con Google</p>
+    <div id="Sfocatura">
+        <div href="" id="Google_button">
+            <img id="Icon" src="/user/userContent/Google_Logo.png"> 
+            <p>Accedi con Google</p>
+        </div>
     </div>
 
     <div id="Home">
         <div id="table_ground">
             <div id="table_back"></div>
 
-            <div id="banco">
-                <div id="foglio">
-                    <input type="text" id="IDRoom">
-                    <input type="text" id="codice" pattern="[0-9]+" placeholder="XXXXX">
+            <div id="ContainerBanco">
+                <div id="banco">
+                    <div id="foglio">
+                        <div id="ContainerFoglio">
+                            <div id="Header">
+                                <img src="/user/userContent/logo_darzo.png" alt="">
+                            </div>
+                            <select id="riunioni"></select>
+                            <p class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tristique mollis tortor, eu aliquet metus malesuada et. Phasellus tincidunt ante at nulla finibus, a iaculis lacus ultricies. Aenean aliquam laoreet hendrerit. Duis eu lacus rhoncus, euismod arcu quis, euismod sem. Phasellus vestibulum nulla eu nulla laoreet, id lacinia erat feugiat. Etiam aliquet fringilla arcu vel facilisis. Vivamus a varius augue, vel maximus ipsum. Proin a nulla at sem accumsan finibus eu eu diam. Pellentesque sit. </p>
+
+                            <input type="text" id="codice" maxlength="5" placeholder="XXXXX" pattern="\d{5}" required>                    
+                            <p class="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tristique mollis tortor, eu aliquet metus malesuada et. Phasellus tincidunt ante at nulla finibus, a iaculis lacus ultricies. Aenean aliquam laoreet hendrerit. Duis eu lacus rhoncus, euismod arcu quis, euismod sem. Phasellus vestibulum nulla eu nulla laoreet, id lacinia erat feugiat. Etiam aliquet fringilla arcu vel facilisis. Vivamus a varius augue, vel maximus ipsum. Proin a nulla at sem accumsan finibus eu eu diam. Pellentesque sit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tristique mollis tortor, eu aliquet metus malesuada et. Phasellus tincidunt ante at nulla finibus, a iaculis lacus ultricies. Aenean aliquam laoreet hendrerit. Duis eu lacus rhoncus, euismod arcu quis, euismod sem. Phasellus vestibulum nulla eu nulla laoreet, id lacinia erat feugiat. Etiam aliquet fringilla arcu vel facilisis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tristique mollis tortor, eu aliquet metus malesuada et. Phasellus tincidunt ante at nulla finibus, a iaculis lacus ultricies. Aenean aliquam laoreet hendrerit. Duis eu lacus rhoncus, euismod arcu. </p>
+                            
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

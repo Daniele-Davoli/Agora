@@ -221,8 +221,10 @@ app.get('/:role/profile', async(req, res) => {
     }
     req.session.user = profile;
     req.session.role = role;
-    req.session.whitelist.domain = [];
-    req.session.whitelist.users = [];
+    req.session.whitelist={
+      domain: [],
+      users: []
+    };
     res.sendFile(__dirname + `/private/${(role === "admin")?"admin":"user"}/logged.html`);
   });
 });
@@ -350,7 +352,6 @@ io.on('connection', (socket) => {
       });
 
       socket.on("WhitelistAdd",(email)=>{
-
         if (email.startsWith('@')) {
           socket.request.session.whitelist.domain.push(email);
         } else {
@@ -359,23 +360,11 @@ io.on('connection', (socket) => {
       })
 
       socket.on("WhitelistRemove",(email)=>{
-
         if (email.startsWith('@')) {
-          query = `
-            DELETE FROM whitelist
-            WHERE IDRiunione = ${socket.request.session.IDRiunione} AND Domain = '${email}'
-          `
+          socket.request.session.whitelist.domain = socket.request.session.whitelist.domain.filter(u => u !== email);
         } else {
-          query = `
-            DELETE FROM whitelist
-            WHERE IDRiunione = ${socket.request.session.IDRiunione} AND Email = '${email}'
-          `
+          socket.request.session.whitelist.users = socket.request.session.whitelist.users.filter(u => u !== email);
         }
-
-        con.query(query,(err,result)=>{
-          if (err) ErrorHandler(err);
-        });
-        
       })
 
       socket.on('CreaRiunione', (titolo,descrizione) => {
@@ -417,6 +406,27 @@ io.on('connection', (socket) => {
               socket.request.session.IDRiunione = result[0].IDRiunione;
               socket.request.session.riunione=true;
               socket.request.session.save();
+
+              let records = socket.request.session.whitelist.users.map(user => [socket.request.session.IDRiunione, user]);
+
+              query = `
+                INSERT INTO whitelist (IDRiunione, Email) VALUES ?
+                ON DUPLICATE KEY UPDATE Email=VALUES(Email);
+              `;
+
+              con.query(query, [records], (err, result) => {
+                if (err) ErrorHandler(err);
+
+                records = socket.request.session.whitelist.domain.map(user => [socket.request.session.IDRiunione, user]);
+
+                query = `
+                  INSERT INTO whitelist (IDRiunione, Domain) VALUES ?
+                  ON DUPLICATE KEY UPDATE Domain=VALUES(Domain);
+                `;
+                con.query(query, [records], (err, result) => {
+                  if (err) ErrorHandler(err);
+                });
+              });
             });
           });
         }
@@ -584,6 +594,16 @@ io.on('connection', (socket) => {
           });
     
         }else{
+          query = `
+            SELECT IDRoom,Titolo
+            FROM riunioni_attive
+          `;
+          con.query(query, (err, result)=> {
+            if (err) ErrorHandler(err);
+
+            socket.emit("ListaRiunioni", result);
+          });
+
           socket.on("Password",(pw,IDRoom) => {
             let query = `SELECT COUNT(*) as num FROM riunioni_attive WHERE IDRoom = '${IDRoom}' AND Password = '${pw}' AND TVStatus = true;`;
             con.query(query, (err,result)=> {
@@ -599,25 +619,46 @@ io.on('connection', (socket) => {
                 con.query(IDRiunione, (err,result)=> {
                   if (err) ErrorHandler(err);
                   socket.request.session.IDRiunione = result[0].IDRiunione;
-    
-                  query = `
-                    SELECT COUNT(*) as num
-                    FROM listeutenti
-                    WHERE IDRiunione = '${result[0].IDRiunione}' AND IDUser = '${socket.request.session.IDRole}'
-                  `
+          
+                  /*Check Whitelist*/
+
+                  query = `SELECT COUNT(*) as num FROM whitelist WHERE Email = '${profile.emails[0].value}' AND IDRiunione = ${result[0].IDRiunione}`
                   con.query(query, (err, result)=> {
                     if (err) ErrorHandler(err);
-  
-                    
-
-                    if(result[0].num == 0){
-                      socket.request.session.authorized = true;
-                      socket.request.session.save();
-                      socket.emit("redirect");
-                    }else{
-                      socket.emit("logout");
-                    }
+                    if (result[0].num === 0){
+                      const domain = "@" + profile.emails[0].value.split("@")[1];
+                      query = `SELECT COUNT(*) as num FROM whitelist WHERE Domain = '${domain}' AND IDRiunione = ${socket.request.session.IDRiunione}`
+                      con.query(query, (err, result)=> {
+                        if (err) ErrorHandler(err);
+                        if (result[0].num === 0){
+                          socket.emit("errPassword");
+                          return
+                        } else keepGoing()
+                      });
+                    }else keepGoing()
                   });
+                  /*Check Whitelist*/
+
+                  function keepGoing(){
+                    query = `
+                      SELECT COUNT(*) as num
+                      FROM listeutenti
+                      WHERE IDRiunione = '${result[0].IDRiunione}' AND IDUser = '${socket.request.session.IDRole}'
+                    `
+                    con.query(query, (err, result)=> {
+                      if (err) ErrorHandler(err);
+    
+                      
+
+                      if(result[0].num == 0){
+                        socket.request.session.authorized = true;
+                        socket.request.session.save();
+                        socket.emit("redirect");
+                      }else{
+                        socket.emit("logout");
+                      }
+                    });
+                  }
                 });
               }else{
                 socket.emit("errPassword");
