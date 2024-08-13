@@ -33,6 +33,8 @@ function ErrorHandler(err){
   con.query(query, (err, result) => {
     if(err) throw err;
   });
+
+  throw(err);
 }
 
 //Reset all status to Offline
