@@ -25,6 +25,7 @@ con.connect(function(err) {
 });
 
 function ErrorHandler(err){
+  console.log(err);
   let query = `
     INSERT INTO log (Data,Errore)
     VALUES(NOW(), "${err}");
@@ -143,7 +144,7 @@ app.get('/:role/auth/google/callback', (req, res, next) => {
 
 //Principal Redirect
 app.get('/', (req, res) => {
-  res.redirect("/admin/auth/google")
+
 });
 
 
@@ -154,10 +155,6 @@ app.get('/', (req, res) => {
 app.get('/:role',(req, res) => {
   const role = req.params.role;
   if(role === "admin" || role === "user"){
-    if (req.isAuthenticated()) {
-      return res.redirect(`/${role}/profile`);
-    }
-
     res.sendFile(__dirname + `/private/${role}/main.html`);
   }else{
     res.status(404).send("Not Found");
@@ -165,16 +162,13 @@ app.get('/:role',(req, res) => {
 
 });
 // Rotta per visualizzare il profilo utente
-app.get('/:role/profile', async(req, res) => {
+app.get('/:role/profile',(req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect(`/`);
   }
 
   const role = req.params.role;
   const profile=req.user;
-
-
-
 
   let CheckStatus = `
     SELECT Status
@@ -221,10 +215,14 @@ app.get('/:role/profile', async(req, res) => {
     }
     req.session.user = profile;
     req.session.role = role;
-    req.session.whitelist={
-      domain: [],
-      users: []
-    };
+
+    if(role === 'admin'){
+      req.session.whitelist={
+        domain: [],
+        users: []
+      };
+    }
+    
     res.sendFile(__dirname + `/private/${(role === "admin")?"admin":"user"}/logged.html`);
   });
 });
@@ -311,11 +309,13 @@ io.on('connection', (socket) => {
     socket.emit('profile',profile.name.givenName,profile.name.familyName);
 
     query = `
-      UPDATE ${(role === "admin")?"admins":"users"}
+      UPDATE ?
       SET Status = 'Online'
-      WHERE ID${(role === "admin")?"Admin":"User"} = ${socket.request.session.IDRole}
+      WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}';
     `;
-    con.query(query,(err, results)=>{
+
+    console.log(query)
+    con.query(query,["users","admins"],(err, results)=>{
       if(err) ErrorHandler(err);
     });
 
@@ -531,6 +531,11 @@ io.on('connection', (socket) => {
           UPDATE admins
           SET Status = 'Offline' 
           WHERE oauth_provider = '${profile.provider}' AND 
+                email = '${profile.emails[0].value}';
+
+          UPDATE users
+          SET Status = 'Offline' 
+          WHERE oauth_provider = '${profile.provider}' AND 
                 email = '${profile.emails[0].value}'
         `;
         con.query(query, (err, result)=> {
@@ -686,6 +691,11 @@ io.on('connection', (socket) => {
       socket.on('disconnect', () => {
         let query = `
           UPDATE users
+          SET Status = 'Offline' 
+          WHERE oauth_provider = '${profile.provider}' AND 
+                email = '${profile.emails[0].value}';
+
+          UPDATE admins
           SET Status = 'Offline' 
           WHERE oauth_provider = '${profile.provider}' AND 
                 email = '${profile.emails[0].value}'
