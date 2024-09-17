@@ -3,13 +3,15 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
 const mysql = require('mysql'); 
-const { createServer } = require('node:http');
+const { createServer } = require('http');
 const { Server } = require('socket.io');
-const { cpSync } = require('node:fs');
+const { cpSync } = require('fs');
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server,{
+  connectionStateRecovery: {}
+});
 
 
 const port=80;
@@ -18,14 +20,13 @@ const con = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",
-  database: "agorà"
+  database: "agora"
 });
 con.connect(function(err) {
   if (err) throw err;
 });
 
 function ErrorHandler(err){
-  console.log(err);
   let query = `
     INSERT INTO log (Data,Errore)
     VALUES(NOW(), "${err}");
@@ -34,7 +35,7 @@ function ErrorHandler(err){
     if(err) throw err;
   });
 
-  throw(err);
+  throw err;
 }
 
 //Reset all status to Offline
@@ -81,16 +82,16 @@ adminPassport.deserializeUser((obj, done) => {
 
 
 userPassport.use(new GoogleStrategy({
-  clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
-  clientSecret: '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',
-  callbackURL: 'http://localhost/user/auth/google/callback' // URL di default
+  clientID: 'CLIENT_ID',
+  clientSecret: 'CLIENT_SECRET',
+  callbackURL: 'http://wyrdventures.com/user/auth/google/callback' // URL di default
 }, function(token, tokenSecret, profile, done) {
   return done(null, profile);
 }));
 adminPassport.use(new GoogleStrategy({
-  clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
-  clientSecret: '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',
-  callbackURL: 'http://localhost/admin/auth/google/callback' // URL di default
+  clientID: 'CLIENT_ID',
+  clientSecret: 'CLIENT_SECRET',
+  callbackURL: 'http://wyrdventures.com/admin/auth/google/callback' // URL di default
 }, function(token, tokenSecret, profile, done) {
   return done(null, profile);
 }));
@@ -146,7 +147,7 @@ app.get('/:role/auth/google/callback', (req, res, next) => {
 
 //Principal Redirect
 app.get('/', (req, res) => {
-
+  res.redirect("/user")
 });
 
 
@@ -157,6 +158,10 @@ app.get('/', (req, res) => {
 app.get('/:role',(req, res) => {
   const role = req.params.role;
   if(role === "admin" || role === "user"){
+    if (req.isAuthenticated()) {
+      return res.redirect(`/${role}/profile`);
+    }
+
     res.sendFile(__dirname + `/private/${role}/main.html`);
   }else{
     res.status(404).send("Not Found");
@@ -164,13 +169,16 @@ app.get('/:role',(req, res) => {
 
 });
 // Rotta per visualizzare il profilo utente
-app.get('/:role/profile',(req, res) => {
+app.get('/:role/profile', async(req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect(`/`);
   }
 
   const role = req.params.role;
   const profile=req.user;
+
+
+
 
   let CheckStatus = `
     SELECT Status
@@ -217,14 +225,10 @@ app.get('/:role/profile',(req, res) => {
     }
     req.session.user = profile;
     req.session.role = role;
-
-    if(role === 'admin'){
-      req.session.whitelist={
-        domain: [],
-        users: []
-      };
-    }
-    
+    req.session.whitelist={
+      domain: [],
+      users: []
+    };
     res.sendFile(__dirname + `/private/${(role === "admin")?"admin":"user"}/logged.html`);
   });
 });
@@ -248,10 +252,13 @@ app.get('/user/joined', async(req, res) => {
     WHERE oauth_provider = '${req.session.user.provider}' AND
         email = '${req.session.user.emails[0].value}'
   `
+  console.log(CheckStatus);
   
   con.query(CheckStatus, (err, result) => {
     if(err) ErrorHandler(err);
 
+    console.log(result);
+    console.log(req.session.authorized);
 
     if(req.session.authorized === true && result[0].Status === "Offline"){
       let query;
@@ -310,15 +317,11 @@ io.on('connection', (socket) => {
 
     socket.emit('profile',profile.name.givenName,profile.name.familyName);
 
-    query = `
-      UPDATE ?
-      SET Status = 'Online'
-      WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}';
-    `;
-
-    console.log(query)
-    con.query(query,["users","admins"],(err, results)=>{
-      if(err) ErrorHandler(err);
+    con.query(`UPDATE users SET Status = 'Online' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
+      if (err) ErrorHandler(err);
+    });
+    con.query(`UPDATE admins SET Status = 'Online' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
+      if (err) ErrorHandler(err);
     });
 
     //Admin or User Selection
@@ -415,20 +418,40 @@ io.on('connection', (socket) => {
                 INSERT INTO whitelist (IDRiunione, Email) VALUES ?
                 ON DUPLICATE KEY UPDATE Email=VALUES(Email);
               `;
+		
 
-              con.query(query, [records], (err, result) => {
-                if (err) ErrorHandler(err);
-
+              if(!records[0]){
                 records = socket.request.session.whitelist.domain.map(user => [socket.request.session.IDRiunione, user]);
-
+  
                 query = `
                   INSERT INTO whitelist (IDRiunione, Domain) VALUES ?
                   ON DUPLICATE KEY UPDATE Domain=VALUES(Domain);
                 `;
+                  
+                if(records[0]){
+                  con.query(query, [records], (err, result) => {
+                    if (err) ErrorHandler(err);
+                  });
+                }
+              }else{
+                console.log(records);
+
                 con.query(query, [records], (err, result) => {
                   if (err) ErrorHandler(err);
+  
+                  records = socket.request.session.whitelist.domain.map(user => [socket.request.session.IDRiunione, user]);
+  
+                  query = `
+                    INSERT INTO whitelist (IDRiunione, Domain) VALUES ?
+                    ON DUPLICATE KEY UPDATE Domain=VALUES(Domain);
+                  `;
+                  if(records[0]){
+                    con.query(query, [records], (err, result) => {
+                      if (err) ErrorHandler(err);
+                    });
+                  }
                 });
-              });
+              }
             });
           });
         }
@@ -503,12 +526,53 @@ io.on('connection', (socket) => {
           VALUES ('${msg}', NOW(), ${socket.request.session.IDRiunione});
         `
         con.query(query, (err, result)=> {
-          if (err) ErrorHandler(err); 
-
+          if (err) {
+            console.log("ciao");
+            ErrorHandler(err);
+            
+          } 
+          socket.request.session.IDDomanda=result.insertId;
           io.to(socket.request.session.id).emit("Domanda", msg, result.insertId);
         });
       })
+      socket.on("Aggiorna",()=> {
 
+          let first=`
+            SELECT COUNT(*) as num
+            FROM  risposte
+            WHERE Risposta LIKE "si" AND IDDomanda = ${socket.request.session.IDDomanda}
+          `
+          con.query(first, (err, result)=> {
+            if (err) ErrorHandler(err);
+            if(result){
+              first=result[0].num;
+
+              let second=`
+                SELECT COUNT(*) as num
+                FROM  risposte
+                WHERE Risposta LIKE 'mi astengo' AND IDDomanda = ${socket.request.session.IDDomanda}
+              `
+              con.query(second, (err, result)=> {
+                if (err) ErrorHandler(err);
+                if(result)second=result[0].num;
+
+                let third=`
+                  SELECT COUNT(*) as num
+                  FROM  risposte
+                  WHERE Risposta LIKE 'no' AND IDDomanda = ${socket.request.session.IDDomanda}
+                `
+                con.query(third, (err, result)=> {
+                  if (err) ErrorHandler(err);
+                  if(result)third=result[0].num;
+
+                  console.log(first, second, third);
+
+                  socket.emit("Aggiorna",[first, second, third])
+                });
+              });
+            }
+          });
+      })
       socket.on("StopDomanda",()=>{
         io.to(socket.request.session.id).emit("StopDomanda");
         query = `
@@ -529,18 +593,10 @@ io.on('connection', (socket) => {
       socket.on('disconnect', () => {
         clearInterval(timer);
 
-        let query = `
-          UPDATE admins
-          SET Status = 'Offline' 
-          WHERE oauth_provider = '${profile.provider}' AND 
-                email = '${profile.emails[0].value}';
-
-          UPDATE users
-          SET Status = 'Offline' 
-          WHERE oauth_provider = '${profile.provider}' AND 
-                email = '${profile.emails[0].value}'
-        `;
-        con.query(query, (err, result)=> {
+        con.query(`UPDATE users SET Status = 'Offline' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
+          if (err) ErrorHandler(err);
+        });
+        con.query(`UPDATE admins SET Status = 'Offline' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
           if (err) ErrorHandler(err);
         });
       });
@@ -549,7 +605,7 @@ io.on('connection', (socket) => {
       let query;
 
       query = `
-        SELECT COUNT(*) as num , IDRiunione
+        SELECT IDRiunione as num
         FROM listeutenti
         WHERE IDUser = ${socket.request.session.IDRole} AND Data_ora_uscita IS NULL
       `
@@ -557,20 +613,21 @@ io.on('connection', (socket) => {
       con.query(query, (err, result)=> {
         if (err) ErrorHandler(err);
 
-        if(result[0].num != 0){
+	console.log(result)
 
-
-
+        if(result[0]){
           socket.emit("redirect");
 
-          if(result[0].num != 0) socket.request.session.IsThereAnotherOne = true;
+          socket.request.session.IsThereAnotherOne = true;
 
           socket.request.session.authorized=true;
-          socket.request.session.IDRiunione = result[0].IDRiunione;
+          socket.request.session.IDRiunione = result[0].num;
 
           let queryInfo=`SELECT * FROM riunioni_attive WHERE IDRiunione = '${socket.request.session.IDRiunione}'`;
           con.query(queryInfo, (err,result)=> {
             if (err) ErrorHandler(err);
+
+		console.log(result)
 
             socket.request.session.IDRoom=result[0].IDRoom;
             socket.request.session.save();
@@ -580,25 +637,30 @@ io.on('connection', (socket) => {
           });
 
           socket.on("Risposta",(msg, idDomanda)=>{
-            query=`
-              SELECT COUNT(*) as num
-              FROM risposte
-              WHERE IDDomanda = ${idDomanda} AND IDUser = ${socket.request.session.IDRole}
-            `
-            con.query(query, (err, result)=> {
-              if (err) ErrorHandler(err);
+            if(idDomanda){
+              query=`
+                SELECT COUNT(*) as num
+                FROM risposte
+                WHERE IDDomanda = ${idDomanda} AND IDUser = ${socket.request.session.IDRole}
+              `
+              con.query(query, (err, result)=> {
+                if (err) ErrorHandler(err);
 
-              if(result[0].num == 0){
-                query=`
-                  INSERT INTO risposte(Risposta, IDUser, IDDomanda)
-                  VALUES ('${msg}', ${socket.request.session.IDRole}, ${idDomanda});
-                `
-                con.query(query, (err, result)=> {
-                  if (err) ErrorHandler(err);
-                });
-              }
-            });
+                if(result[0].num == 0){
+                  query=`
+                    INSERT INTO risposte(Risposta, IDUser, IDDomanda)
+                    VALUES ('${msg}', ${socket.request.session.IDRole}, ${idDomanda});
+                  `
+                  con.query(query, (err, result)=> {
+                    if (err) ErrorHandler(err);
+
+                    socket.to(socket.request.session.IDRoom).emit("Aggiorna","");
+                  });
+                }
+              });
+            }
           });
+          
     
         }else{
           query = `
@@ -658,11 +720,19 @@ io.on('connection', (socket) => {
                       
 
                       if(result[0].num == 0){
-                        socket.request.session.authorized = true;
-                        socket.request.session.save();
-                        socket.emit("redirect");
+
+                        con.query(`UPDATE admins SET Status = 'Offline' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
+                          if (err) ErrorHandler(err);
+                        });
+                        con.query(`UPDATE users SET Status = 'Offline' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
+                          if (err) ErrorHandler(err);
+
+                          socket.request.session.authorized = true;
+                          socket.request.session.save();
+                          socket.emit("redirect");
+                        });
                       }else{
-                        socket.emit("logout");
+                        socket.emit("errPassword");
                       }
                     });
                   }
@@ -691,18 +761,10 @@ io.on('connection', (socket) => {
         });
       })
       socket.on('disconnect', () => {
-        let query = `
-          UPDATE users
-          SET Status = 'Offline' 
-          WHERE oauth_provider = '${profile.provider}' AND 
-                email = '${profile.emails[0].value}';
-
-          UPDATE admins
-          SET Status = 'Offline' 
-          WHERE oauth_provider = '${profile.provider}' AND 
-                email = '${profile.emails[0].value}'
-        `;
-        con.query(query, (err, result)=> {
+        con.query(`UPDATE admins SET Status = 'Offline' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
+          if (err) ErrorHandler(err);
+        });
+        con.query(`UPDATE users SET Status = 'Offline' WHERE oauth_provider = '${profile.provider}' AND email = '${profile.emails[0].value}'`, (err, result)=> {
           if (err) ErrorHandler(err);
         });
       });

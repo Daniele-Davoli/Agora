@@ -101,6 +101,21 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("granted", () => {
         AnimationDesc();
     });
+
+    socket.on("Aggiorna",(arg="") => {
+
+        console.log(arg);
+        if(!arg){
+            console.log("emit");
+            socket.emit("Aggiorna")
+        }
+        else{
+            console.log("update");
+            document.getElementById("poll-yes").innerHTML=arg[0]
+            document.getElementById("poll-boh").innerHTML=arg[1]
+            document.getElementById("poll-no").innerHTML=arg[2]
+        }
+    })
 });
 
 window.onbeforeunload = function(){

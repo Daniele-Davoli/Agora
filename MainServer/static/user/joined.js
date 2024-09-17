@@ -43,7 +43,7 @@ window.onload = (event) => {
         window.location.pathname="/";
     });
     document.getElementById("noSicuro").addEventListener('click', function () {
-        RispostaSicuro(2);
+        document.getElementById("Sicuro").style.display = "none";
     });
 
     document.getElementById("si").addEventListener('click', function () {
