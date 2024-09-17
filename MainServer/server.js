@@ -67,14 +67,14 @@ adminPassport.deserializeUser((obj, done) => {
 
 userPassport.use(new GoogleStrategy({
   clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
-  clientSecret: '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',
-  callbackURL: 'http://localhost/user/auth/google/callback' // URL di default
+  clientSecret: '',
+  callbackURL: '' // URL di default
 }, function(token, tokenSecret, profile, done) {
   return done(null, profile);
 }));
 adminPassport.use(new GoogleStrategy({
-  clientID: '382797113950-puuvr948htop43ii77t4bn99966smdf6.apps.googleusercontent.com',
-  clientSecret: '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',
+  clientID: '',
+  clientSecret: '',
   callbackURL: 'http://localhost/admin/auth/google/callback' // URL di default
 }, function(token, tokenSecret, profile, done) {
   return done(null, profile);
